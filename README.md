@@ -1,6 +1,8 @@
-# TurtleBot3 AutoRace 2020 metapackage 
+# TurtleBot3
+<img src="https://github.com/ROBOTIS-GIT/emanual/blob/master/assets/images/platform/turtlebot3/logo_turtlebot3.png" width="300">
 
-[![noetic-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_autorace_2020/workflows/Noetic/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_autorace_2020/tree/noetic-devel)
+- Active Branches: noetic, main
+- Legacy Branches: *-devel
 
 ## Simulation (ROS 1 Noetic)
 - Youtube playlist [TurtleBot3 AutoRace 2020 for Noetic](https://www.youtube.com/watch?v=d2cP8OTMbwI&list=PLRG6WP3c31_WsNjwmYID2ulX5g4WcjKbI)
