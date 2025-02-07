@@ -16,6 +16,3 @@
           lightness_l: 95
           saturation_h: 255
           saturation_l: 70
-    is_detection_calibration_mode: true
-    use_sim_time: false
-

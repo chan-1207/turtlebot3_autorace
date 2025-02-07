@@ -15,6 +15,7 @@ install(PROGRAMS
   nodes/detect_construction_sign.py
   nodes/detect_intersection_sign.py
   nodes/detect_lane.py
+  nodes/detect_parking_sign.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

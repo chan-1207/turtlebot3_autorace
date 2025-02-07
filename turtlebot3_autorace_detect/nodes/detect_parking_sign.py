@@ -14,7 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 class DetectSign(Node):
     def __init__(self):
         super().__init__('detect_sign')
-        
+
         self.sub_image_type = "raw" # you can choose image type "compressed", "raw"
         self.pub_image_type = "compressed" # you can choose image type "compressed", "raw"
 
@@ -49,9 +49,9 @@ class DetectSign(Node):
             self.pub_image_traffic_sign = self.create_publisher(
                 Image, '/detect/image_output', 10
             )
-        
+
         self.cvBridge = CvBridge()
-        self.TrafficSign = Enum('TrafficSign', 'construction')
+        self.TrafficSign = Enum('TrafficSign', 'parking')
         self.counter = 1
 
         self.fnPreproc()
@@ -66,9 +66,9 @@ class DetectSign(Node):
         dir_path = dir_path.replace('turtlebot3_autorace_detect/nodes', 'turtlebot3_autorace_detect/')
         dir_path += 'image/'
 
-        self.img_construction  = cv2.imread(dir_path + 'construction.png',0)
-        self.kp_construction, self.des_construction  = self.sift.detectAndCompute(self.img_construction, None)
-      
+        self.img_parking = cv2.imread(dir_path + 'parking.png',0)      # trainImage2   
+        self.kp_parking, self.des_parking = self.sift.detectAndCompute(self.img_parking,None)
+    
         FLANN_INDEX_KDTREE = 0
         index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
         search_params = dict(checks = 50)
@@ -97,40 +97,42 @@ class DetectSign(Node):
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 8 #9
+        MIN_MATCH_COUNT = 9
         MIN_MSE_DECISION = 50000
 
         # find the keypoints and descriptors with SIFT
         kp1, des1 = self.sift.detectAndCompute(cv_image_input,None)
 
-        matches_construction = self.flann.knnMatch(des1,self.des_construction,k=2)
-      
+        matches_parking = self.flann.knnMatch(des1,self.des_parking,k=2)    
         image_out_num = 1
 
-        good_construction = []
-        for m,n in matches_construction:
+        good_parking = []
+        for m,n in matches_parking:
             if m.distance < 0.7*n.distance:
-                good_construction.append(m)
-        if len(good_construction)>MIN_MATCH_COUNT:
-            src_pts = np.float32([kp1[m.queryIdx].pt for m in good_construction ]).reshape(-1,1,2)
-            dst_pts = np.float32([self.kp_construction[m.trainIdx].pt for m in good_construction]).reshape(-1,1,2)
+                good_parking.append(m)
+
+        if len(good_parking)>MIN_MATCH_COUNT:
+            src_pts = np.float32([ kp1[m.queryIdx].pt for m in good_parking ]).reshape(-1,1,2)
+            dst_pts = np.float32([ self.kp_parking[m.trainIdx].pt for m in good_parking ]).reshape(-1,1,2)
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-            matches_construction = mask.ravel().tolist()
+            matchesMask_parking = mask.ravel().tolist()
 
             mse = self.fnCalcMSE(src_pts, dst_pts)
             if mse < MIN_MSE_DECISION:
                 msg_sign = UInt8()
-                msg_sign.data = self.TrafficSign.construction.value
+                msg_sign.data = self.TrafficSign.parking.value
 
                 self.pub_traffic_sign.publish(msg_sign)
 
-                self.get_logger().info("construction")
+                self.get_logger().info("parking")
                 image_out_num = 2
+
         else:
-            matches_construction = None
-            # self.get_logger().info("not found")
-      
+            matchesMask_parking = None
+            # self.get_logger().info("nothing")
+
+
         if image_out_num == 1:
             if self.pub_image_type == "compressed":
                 # publishes traffic sign image in compressed type
@@ -141,20 +143,20 @@ class DetectSign(Node):
                 self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
 
         elif image_out_num == 2:
-            draw_params_construction = dict(matchColor = (255,0,0), # draw matches in green color
-                        singlePointColor = None,
-                        matchesMask = matches_construction, # draw only inliers
-                        flags = 2)
+            draw_params = dict(matchColor = (255,0,0), # draw matches in green color
+                            singlePointColor = None,
+                            matchesMask = matchesMask_parking, # draw only inliers
+                            flags = 2)
 
-            final_construction = cv2.drawMatches(cv_image_input,kp1,self.img_construction,self.kp_construction,good_construction,None,**draw_params_construction)
+            final_parking = cv2.drawMatches(cv_image_input,kp1,self.img_parking,self.kp_parking,good_parking,None,**draw_params)
 
             if self.pub_image_type == "compressed":
                 # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_construction, "jpg"))
+                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_parking, "jpg"))
 
             elif self.pub_image_type == "raw":
                 # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_construction, "bgr8"))
+                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_parking, "bgr8"))
 
 def main(args=None):
     rclpy.init(args=args)
