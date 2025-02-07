@@ -21,7 +21,6 @@ class ImageCompensation(Node):
                 step = 0.1)]
         )
 
-        # 파라미터 선언
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -33,12 +32,12 @@ class ImageCompensation(Node):
         self.clip_hist_percent = self.get_parameter('camera.extrinsic_camera_calibration.clip_hist_percent').value
         self.is_calibration_mode = self.get_parameter('is_extrinsic_camera_calibration_mode').value
 
-        # Calibration 모드일 때 파라미터 변경 콜백
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.param_update_callback)
 
-        # 이미지 구독
         self.sub_image_type = "compressed"  # "compressed" / "raw"
+        self.pub_image_type = "raw"  # "compressed" / "raw"
+
         if self.sub_image_type == "compressed":
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
@@ -54,8 +53,6 @@ class ImageCompensation(Node):
                 10
             )
 
-        # 이미지 퍼블리시
-        self.pub_image_type = "raw"  # "compressed" / "raw"
         if self.pub_image_type == "compressed":
             self.pub_image_compensated = self.create_publisher(CompressedImage, '/camera/image_output/compressed', 10)
         elif self.pub_image_type == "raw":

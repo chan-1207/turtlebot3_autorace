@@ -29,7 +29,7 @@ class ImageProjection(Node):
                     to_value=320,
                     step=1)]
         )
-        # 파라미터 선언 및 기본값 설정
+       
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -56,7 +56,7 @@ class ImageProjection(Node):
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.cbGetImageProjectionParam)
 
-        self.sub_image_type = "compressed"        # "compressed" / "raw"
+        self.sub_image_type = "compressed" # "compressed" / "raw"
         self.pub_image_type = "raw"        # "compressed" / "raw"
 
         if self.sub_image_type == "compressed":
