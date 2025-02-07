@@ -13,15 +13,14 @@ from cv_bridge import CvBridge
 
 class DetectSign(Node):
     def __init__(self):
-        # ROS2 Node 초기화
         super().__init__('detect_sign')
 
-        # 이미지 타입 설정
-        self.sub_image_type = "raw"  # "compressed" 또는 "raw"
-        self.pub_image_type = "compressed"  # "compressed" 또는 "raw"
+        self.sub_image_type = "raw"  # you can choose image type "compressed", "raw"
+        self.pub_image_type = "compressed"  # you can choose image type "compressed", "raw"
 
-        # Subscriber 설정
+        #subscribes
         if self.sub_image_type == "compressed":
+            # subscribes compressed image
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/detect/image_input/compressed',
@@ -29,6 +28,7 @@ class DetectSign(Node):
                 10
             )
         elif self.sub_image_type == "raw":
+            # subscribes raw image
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/detect/image_input',
@@ -36,14 +36,16 @@ class DetectSign(Node):
                 10
             )
 
-        # Publisher 설정
+        #publishes
         self.pub_traffic_sign = self.create_publisher(UInt8, '/detect/traffic_sign', 10)
         if self.pub_image_type == "compressed":
+            # publishes traffic sign image in compressed type 
             self.pub_image_traffic_sign = self.create_publisher(
                 CompressedImage,
                 '/detect/image_output/compressed', 10
             )
         elif self.pub_image_type == "raw":
+            # publishes traffic sign image in raw type
             self.pub_image_traffic_sign = self.create_publisher(
                 Image, '/detect/image_output', 10
             )
@@ -52,10 +54,8 @@ class DetectSign(Node):
         self.TrafficSign = Enum('TrafficSign', 'intersection left right')
         self.counter = 1
 
-        # 전처리 수행
         self.fnPreproc()
 
-        # 노드 초기화 로그
         self.get_logger().info("DetectSign Node Initialized")
 
     def fnPreproc(self):
@@ -239,23 +239,12 @@ class DetectSign(Node):
                 # publishes traffic sign image in raw type
                 self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_right, "bgr8"))
 
-    def main(self):
-        rclpy.spin(self)
-
-
 def main(args=None):
     rclpy.init(args=args)
     node = DetectSign()
-    
-    try:
-        node.main()  # rclpy.spin(node) 호출
-    except KeyboardInterrupt:
-        node.get_logger().info("Shutting down DetectSign Node cleanly...")
-    finally:
-        # 노드 자원 정리
-        if rclpy.ok():  # rclpy가 활성화되어 있는 경우에만 종료
-            node.destroy_node()
-
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

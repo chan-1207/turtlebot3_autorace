@@ -16,7 +16,7 @@ def generate_launch_description():
     calibration_mode=LaunchConfiguration('calibration_mode')
 
     detect_param = os.path.join(
-        get_package_share_directory('turtlebot3_lane_tracking_detect'),
+        get_package_share_directory('turtlebot3_autorace_detect'),
         'param',
         'lane',
         'lane.yaml'
@@ -26,7 +26,7 @@ def generate_launch_description():
     
     # Define the node
     detect_lane_node = Node(
-        package='turtlebot3_lane_tracking_detect',
+        package='turtlebot3_autorace_detect',
         executable='detect_lane.py',
         name='detect_lane',
         output='screen',

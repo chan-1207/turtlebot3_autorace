@@ -12,6 +12,7 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
+  nodes/detect_construction_sign.py
   nodes/detect_intersection_sign.py
   nodes/detect_lane.py
   DESTINATION lib/${PROJECT_NAME}
@@ -25,18 +26,9 @@ install(DIRECTORY param/
   DESTINATION share/${PROJECT_NAME}/param
 )
 
-# install(DIRECTORY cfg/
-#   DESTINATION share/${PROJECT_NAME}/cfg
-# )
-
 install(DIRECTORY image/
   DESTINATION share/${PROJECT_NAME}/image
 )
-
-#install(DIRECTORY
-#  param
-#  DESTINATION share/${PROJECT_NAME}
-#)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

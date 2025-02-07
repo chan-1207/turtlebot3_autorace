@@ -4,7 +4,7 @@
   <name>turtlebot3_autorace_detect</name>
   <version>1.0.0</version>
   <description>ROS2 port of turtlebot3_autorace_detect</description>
-  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <maintainer email="junyeong4321@gmail.com">jun</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
