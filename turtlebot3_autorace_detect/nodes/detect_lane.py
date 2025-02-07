@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -19,69 +19,104 @@
 
 # Authors: Leon Jung, Gilbert, Ashe Kim, Special Thanks : Roger Sacchelli
 
-import rospy
+import rclpy
+from rclpy.node import Node
+from rclpy.parameter import Parameter
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
 from std_msgs.msg import UInt8, Float64
 from sensor_msgs.msg import Image, CompressedImage
-from dynamic_reconfigure.server import Server
-from turtlebot3_autorace_detect.cfg import DetectLaneParamsConfig
-
-class DetectLane():
+from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, IntegerRange
+class DetectLane(Node):
     def __init__(self):
-        self.hue_white_l = rospy.get_param("~detect/lane/white/hue_l", 0)
-        self.hue_white_h = rospy.get_param("~detect/lane/white/hue_h", 179)
-        self.saturation_white_l = rospy.get_param("~detect/lane/white/saturation_l", 0)
-        self.saturation_white_h = rospy.get_param("~detect/lane/white/saturation_h", 70)
-        self.lightness_white_l = rospy.get_param("~detect/lane/white/lightness_l", 105)
-        self.lightness_white_h = rospy.get_param("~detect/lane/white/lightness_h", 255)
+        super().__init__('detect_lane')
 
-        self.hue_yellow_l = rospy.get_param("~detect/lane/yellow/hue_l", 10)
-        self.hue_yellow_h = rospy.get_param("~detect/lane/yellow/hue_h", 127)
-        self.saturation_yellow_l = rospy.get_param("~detect/lane/yellow/saturation_l", 70)
-        self.saturation_yellow_h = rospy.get_param("~detect/lane/yellow/saturation_h", 255)
-        self.lightness_yellow_l = rospy.get_param("~detect/lane/yellow/lightness_l", 95)
-        self.lightness_yellow_h = rospy.get_param("~detect/lane/yellow/lightness_h", 255)
+        parameter_descriptor_hue = ParameterDescriptor(
+            description='hue parameter range',
+            integer_range=[IntegerRange(
+                from_value = 0,
+                to_value = 179,
+                step = 1)]
+        )
+        parameter_descriptor_saturation_lightness = ParameterDescriptor(
+            description='saturation and lightness range',
+            integer_range=[IntegerRange(
+                from_value = 0,
+                to_value = 255,
+                step = 1)]
+        )
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('detect.lane.white.hue_l', 0, parameter_descriptor_hue),
+                ('detect.lane.white.hue_h', 179, parameter_descriptor_hue),
+                ('detect.lane.white.saturation_l', 0, parameter_descriptor_saturation_lightness),
+                ('detect.lane.white.saturation_h', 70, parameter_descriptor_saturation_lightness),
+                ('detect.lane.white.lightness_l', 105, parameter_descriptor_saturation_lightness),
+                ('detect.lane.white.lightness_h', 255, parameter_descriptor_saturation_lightness),
+                ('detect.lane.yellow.hue_l', 10, parameter_descriptor_hue),
+                ('detect.lane.yellow.hue_h', 127, parameter_descriptor_hue),
+                ('detect.lane.yellow.saturation_l', 70, parameter_descriptor_saturation_lightness),
+                ('detect.lane.yellow.saturation_h', 255, parameter_descriptor_saturation_lightness),
+                ('detect.lane.yellow.lightness_l', 95, parameter_descriptor_saturation_lightness),
+                ('detect.lane.yellow.lightness_h', 255, parameter_descriptor_saturation_lightness),
+                ('is_detection_calibration_mode', False)
+            ]
+        )
 
-        self.is_calibration_mode = rospy.get_param("~is_detection_calibration_mode", False)
+        self.hue_white_l = self.get_parameter("detect.lane.white.hue_l").get_parameter_value().integer_value
+        self.hue_white_h = self.get_parameter("detect.lane.white.hue_h").get_parameter_value().integer_value
+        self.saturation_white_l = self.get_parameter("detect.lane.white.saturation_l").get_parameter_value().integer_value
+        self.saturation_white_h = self.get_parameter("detect.lane.white.saturation_h").get_parameter_value().integer_value
+        self.lightness_white_l = self.get_parameter("detect.lane.white.lightness_l").get_parameter_value().integer_value
+        self.lightness_white_h = self.get_parameter("detect.lane.white.lightness_h").get_parameter_value().integer_value
+
+        self.hue_yellow_l = self.get_parameter("detect.lane.yellow.hue_l").get_parameter_value().integer_value
+        self.hue_yellow_h = self.get_parameter("detect.lane.yellow.hue_h").get_parameter_value().integer_value
+        self.saturation_yellow_l = self.get_parameter("detect.lane.yellow.saturation_l").get_parameter_value().integer_value
+        self.saturation_yellow_h = self.get_parameter("detect.lane.yellow.saturation_h").get_parameter_value().integer_value
+        self.lightness_yellow_l = self.get_parameter("detect.lane.yellow.lightness_l").get_parameter_value().integer_value
+        self.lightness_yellow_h = self.get_parameter("detect.lane.yellow.lightness_h").get_parameter_value().integer_value
+
+        self.is_calibration_mode = self.get_parameter("is_detection_calibration_mode").get_parameter_value().bool_value
         if self.is_calibration_mode == True:
-            srv_detect_lane = Server(DetectLaneParamsConfig, self.cbGetDetectLaneParam)
+            self.add_on_set_parameters_callback(self.cbGetDetectLaneParam)
 
         self.sub_image_type = "raw"         # you can choose image type "compressed", "raw"
         self.pub_image_type = "compressed"  # you can choose image type "compressed", "raw"
 
         if self.sub_image_type == "compressed":
             # subscribes compressed image
-            self.sub_image_original = rospy.Subscriber('/detect/image_input/compressed', CompressedImage, self.cbFindLane, queue_size = 1)
+            self.sub_image_original = self.create_subscription(CompressedImage, '/detect/image_input/compressed', self.cbFindLane, 1)
         elif self.sub_image_type == "raw":
             # subscribes raw image
-            self.sub_image_original = rospy.Subscriber('/detect/image_input', Image, self.cbFindLane, queue_size = 1)
+            self.sub_image_original = self.create_subscription(Image, '/detect/image_input', self.cbFindLane, 1)
 
         if self.pub_image_type == "compressed":
             # publishes lane image in compressed type 
-            self.pub_image_lane = rospy.Publisher('/detect/image_output/compressed', CompressedImage, queue_size = 1)
+            self.pub_image_lane = self.create_publisher(CompressedImage, '/detect/image_output/compressed', 1)
         elif self.pub_image_type == "raw":
             # publishes lane image in raw type
-            self.pub_image_lane = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
+            self.pub_image_lane = self.create_publisher(Image, '/detect/image_output', 1)
 
         if self.is_calibration_mode == True:
             if self.pub_image_type == "compressed":
                 # publishes lane image in compressed type 
-                self.pub_image_white_lane = rospy.Publisher('/detect/image_output_sub1/compressed', CompressedImage, queue_size = 1)
-                self.pub_image_yellow_lane = rospy.Publisher('/detect/image_output_sub2/compressed', CompressedImage, queue_size = 1)
+                self.pub_image_white_lane = self.create_publisher(CompressedImage, '/detect/image_output_sub1/compressed', 1)
+                self.pub_image_yellow_lane = self.create_publisher(CompressedImage, '/detect/image_output_sub2/compressed', 1)
             elif self.pub_image_type == "raw":
                 # publishes lane image in raw type
-                self.pub_image_white_lane = rospy.Publisher('/detect/image_output_sub1', Image, queue_size = 1)
-                self.pub_image_yellow_lane = rospy.Publisher('/detect/image_output_sub2', Image, queue_size = 1)
+                self.pub_image_white_lane = self.create_publisher(Image, '/detect/image_output_sub1', 1)
+                self.pub_image_yellow_lane = self.create_publisher(Image, '/detect/image_output_sub2', 1)
 
-        self.pub_lane = rospy.Publisher('/detect/lane', Float64, queue_size = 1)
+        self.pub_lane = self.create_publisher(Float64, '/detect/lane', 1)
 
         # subscribes state : yellow line reliability
-        self.pub_yellow_line_reliability = rospy.Publisher('/detect/yellow_line_reliability', UInt8, queue_size=1)
+        self.pub_yellow_line_reliability = self.create_publisher(UInt8, '/detect/yellow_line_reliability', 1)
  
         # subscribes state : white line reliability
-        self.pub_white_line_reliability = rospy.Publisher('/detect/white_line_reliability', UInt8, queue_size=1)
+        self.pub_white_line_reliability = self.create_publisher(UInt8, '/detect/white_line_reliability', 1)
  
         self.cvBridge = CvBridge()
 
@@ -93,36 +128,49 @@ class DetectLane():
         self.reliability_white_line = 100
         self.reliability_yellow_line = 100
 
-    def cbGetDetectLaneParam(self, config, level):
-        rospy.loginfo("[Detect Lane] Detect Lane Calibration Parameter reconfigured to")
-        rospy.loginfo("hue_white_l : %d", config.hue_white_l)
-        rospy.loginfo("hue_white_h : %d", config.hue_white_h)
-        rospy.loginfo("saturation_white_l : %d", config.saturation_white_l)
-        rospy.loginfo("saturation_white_h : %d", config.saturation_white_h)
-        rospy.loginfo("lightness_white_l : %d", config.lightness_white_l)
-        rospy.loginfo("lightness_white_h : %d", config.lightness_white_h)
-        rospy.loginfo("hue_yellow_l : %d", config.hue_yellow_l)
-        rospy.loginfo("hue_yellow_h : %d", config.hue_yellow_h)
-        rospy.loginfo("saturation_yellow_l : %d", config.saturation_yellow_l)
-        rospy.loginfo("saturation_yellow_h : %d", config.saturation_yellow_h)
-        rospy.loginfo("lightness_yellow_l : %d", config.lightness_yellow_l)
-        rospy.loginfo("lightness_yellow_h : %d", config.lightness_yellow_h)
-
-        self.hue_white_l = config.hue_white_l
-        self.hue_white_h = config.hue_white_h
-        self.saturation_white_l = config.saturation_white_l
-        self.saturation_white_h = config.saturation_white_h
-        self.lightness_white_l = config.lightness_white_l
-        self.lightness_white_h = config.lightness_white_h
-
-        self.hue_yellow_l = config.hue_yellow_l
-        self.hue_yellow_h = config.hue_yellow_h
-        self.saturation_yellow_l = config.saturation_yellow_l
-        self.saturation_yellow_h = config.saturation_yellow_h
-        self.lightness_yellow_l = config.lightness_yellow_l
-        self.lightness_yellow_h = config.lightness_yellow_h
-
-        return config
+    def cbGetDetectLaneParam(self, parameters):
+        # rospy.loginfo("[Detect Lane] Detect Lane Calibration Parameter reconfigured to")
+        # rospy.loginfo("hue_white_l : %d", config.hue_white_l)
+        # rospy.loginfo("hue_white_h : %d", config.hue_white_h)
+        # rospy.loginfo("saturation_white_l : %d", config.saturation_white_l)
+        # rospy.loginfo("saturation_white_h : %d", config.saturation_white_h)
+        # rospy.loginfo("lightness_white_l : %d", config.lightness_white_l)
+        # rospy.loginfo("lightness_white_h : %d", config.lightness_white_h)
+        # rospy.loginfo("hue_yellow_l : %d", config.hue_yellow_l)
+        # rospy.loginfo("hue_yellow_h : %d", config.hue_yellow_h)
+        # rospy.loginfo("saturation_yellow_l : %d", config.saturation_yellow_l)
+        # rospy.loginfo("saturation_yellow_h : %d", config.saturation_yellow_h)
+        # rospy.loginfo("lightness_yellow_l : %d", config.lightness_yellow_l)
+        # rospy.loginfo("lightness_yellow_h : %d", config.lightness_yellow_h)
+        for param in parameters:
+          self.get_logger().info(f"Parameter name: {param.name}")
+          self.get_logger().info(f"Parameter value: {param.value}")
+          self.get_logger().info(f"Parameter type: {param.type_}")
+          if param.name == 'detect.lane.white.hue_l':
+            self.hue_white_l = param.value 
+          elif param.name == 'detect.lane.white.hue_h':
+            self.hue_white_h = param.value
+          elif param.name == 'detect.lane.white.saturation_l':
+            self.saturation_white_l = param.value
+          elif param.name == 'detect.lane.white.saturation_h':
+            self.saturation_white_h = param.value
+          elif param.name == 'detect.lane.white.lightness_l':
+            self.lightness_white_l = param.value
+          elif param.name == 'detect.lane.white.lightness_h':
+            self.lightness_white_h = param.value
+          elif param.name == 'detect.lane.yellow.hue_l':
+            self.hue_yellow_l = param.value
+          elif param.name == 'detect.lane.yellow.hue_h':
+            self.hue_yellow_h = param.value
+          elif param.name == 'detect.lane.yellow.saturation_l':
+            self.saturation_yellow_l = param.value
+          elif param.name == 'detect.lane.yellow.saturation_h':
+            self.saturation_yellow_h = param.value
+          elif param.name == 'detect.lane.yellow.lightness_l':
+            self.lightness_yellow_l = param.value
+          elif param.name == 'detect.lane.yellow.lightness_h':
+            self.lightness_yellow_h = param.value
+        return SetParametersResult(successful=True)
 
     def cbFindLane(self, image_msg):
         # Change the frame rate by yourself. Now, it is set to 1/3 (10fps). 
@@ -330,7 +378,7 @@ class DetectLane():
 
         # Find the peak of the left and right halves of the histogram
         # These will be the starting point for the left and right lines
-        midpoint = np.int(histogram.shape[0] / 2)
+        midpoint = np.int_(histogram.shape[0] / 2)
 
         if left_or_right == 'left':
             lane_base = np.argmax(histogram[:midpoint])
@@ -341,7 +389,7 @@ class DetectLane():
         nwindows = 20
 
         # Set height of windows
-        window_height = np.int(img_w.shape[0] / nwindows)
+        window_height = np.int_(img_w.shape[0] / nwindows)
 
         # Identify the x and y positions of all nonzero pixels in the image
         nonzero = img_w.nonzero()
@@ -380,7 +428,7 @@ class DetectLane():
 
             # If you found > minpix pixels, recenter next window on their mean position
             if len(good_lane_inds) > minpix:
-                x_current = np.int(np.mean(nonzerox[good_lane_inds]))
+                x_current = np.int_(np.mean(nonzerox[good_lane_inds]))
 
         # Concatenate the arrays of indices
         lane_inds = np.concatenate(lane_inds)
@@ -482,10 +530,11 @@ class DetectLane():
 
             self.pub_image_lane.publish(self.cvBridge.cv2_to_imgmsg(final, "bgr8"))
 
-    def main(self):
-        rospy.spin()
-
-if __name__ == '__main__':
-    rospy.init_node('detect_lane')
+def main(args=None):
+    rclpy.init(args=args)
     node = DetectLane()
-    node.main()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+if __name__ == '__main__':
+    main()

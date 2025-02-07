@@ -1,69 +1,55 @@
-################################################################################
-# Set minimum required version of cmake, project name and compile options
-################################################################################
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(turtlebot3_autorace_detect)
 
-################################################################################
-# Find catkin packages and libraries for catkin and system dependencies
-################################################################################
-find_package(catkin REQUIRED COMPONENTS
-  dynamic_reconfigure
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+install(PROGRAMS
+  nodes/detect_intersection_sign.py
+  nodes/detect_lane.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
-################################################################################
-# Setup for python modules and scripts
-################################################################################
-catkin_python_setup()
-
-################################################################################
-# Declare ROS messages, services and actions
-################################################################################
-
-################################################################################
-# Declare ROS dynamic reconfigure parameters
-################################################################################
-generate_dynamic_reconfigure_options(
-  cfg/DetectLaneParams.cfg
-  cfg/DetectLevelParams.cfg
-  cfg/DetectTrafficLightParams.cfg
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
 )
 
-################################################################################
-# Declare catkin specific configuration to be passed to dependent projects
-################################################################################
-catkin_package(
-  CATKIN_DEPENDS dynamic_reconfigure
+install(DIRECTORY param/
+  DESTINATION share/${PROJECT_NAME}/param
 )
 
-################################################################################
-# Build
-################################################################################
+# install(DIRECTORY cfg/
+#   DESTINATION share/${PROJECT_NAME}/cfg
+# )
 
-################################################################################
-# Install
-################################################################################
-catkin_install_python(PROGRAMS
-  nodes/detect_construction
-  nodes/detect_construction_sign
-  nodes/detect_intersection
-  nodes/detect_intersection_sign
-  nodes/detect_lane
-  nodes/detect_level_crossing
-  nodes/detect_level_crossing_sign
-  nodes/detect_parking
-  nodes/detect_parking_sign
-  nodes/detect_traffic_light
-  nodes/detect_tunnel
-  nodes/detect_tunnel_sign
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(DIRECTORY image/
+  DESTINATION share/${PROJECT_NAME}/image
 )
 
-install(DIRECTORY cfg image launch param
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#install(DIRECTORY
+#  param
+#  DESTINATION share/${PROJECT_NAME}
+#)
 
-################################################################################
-# Test
-################################################################################
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+  #  DESTINATION share/${PROJECT_NAME}
+  #)
+endif()
 
+ament_package()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -19,22 +19,24 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
  
-import rospy
-import numpy as np
+import rclpy
+from rclpy.node import Node
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Twist
+import atexit
 
-class ControlLane():
+class ControlLane(Node):
     def __init__(self):
-        self.sub_lane = rospy.Subscriber('/control/lane', Float64, self.cbFollowLane, queue_size = 1)
-        self.sub_max_vel = rospy.Subscriber('/control/max_vel', Float64, self.cbGetMaxVel, queue_size = 1)
-        self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
+        super().__init__('control_lane')
+        self.sub_lane = self.create_subscription(Float64, '/control/lane', self.cbFollowLane, 1)
+        self.sub_max_vel = self.create_subscription(Float64, '/control/max_vel', self.cbGetMaxVel, 1)
+        self.pub_cmd_vel = self.create_publisher(Twist, '/control/cmd_vel', 1)
 
         self.lastError = 0
         self.MAX_VEL = 0.1
 
-        rospy.on_shutdown(self.fnShutDown)
-
+        #self.shut(self.fnShutDown)
+        #atexit.register(self.fnShutDown)
     def cbGetMaxVel(self, max_vel_msg):
         self.MAX_VEL = max_vel_msg.data
 
@@ -52,29 +54,32 @@ class ControlLane():
         twist = Twist()
         # twist.linear.x = 0.05        
         twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), 0.05)
-        twist.linear.y = 0
-        twist.linear.z = 0
-        twist.angular.x = 0
-        twist.angular.y = 0
+        twist.linear.y = 0.0
+        twist.linear.z = 0.0
+        twist.angular.x = 0.0
+        twist.angular.y = 0.0
         twist.angular.z = -max(angular_z, -2.0) if angular_z < 0 else -min(angular_z, 2.0)
         self.pub_cmd_vel.publish(twist)
 
     def fnShutDown(self):
-        rospy.loginfo("Shutting down. cmd_vel will be 0")
+        self.get_logger().info("Shutting down. cmd_vel will be 0")
+
 
         twist = Twist()
-        twist.linear.x = 0
-        twist.linear.y = 0
-        twist.linear.z = 0
-        twist.angular.x = 0
-        twist.angular.y = 0
-        twist.angular.z = 0
+        twist.linear.x = 0.0
+        twist.linear.y = 0.0
+        twist.linear.z = 0.0
+        twist.angular.x = 0.0
+        twist.angular.y = 0.0
+        twist.angular.z = 0.0
         self.pub_cmd_vel.publish(twist) 
 
-    def main(self):
-        rospy.spin()
+def main(args=None):
+    rclpy.init(args=args)
+    node = ControlLane()
+    rclpy.spin(node)    
+    node.destroy_node()
+    rclpy.shutdown() 
 
 if __name__ == '__main__':
-    rospy.init_node('control_lane')
-    node = ControlLane()
-    node.main()
+    main()

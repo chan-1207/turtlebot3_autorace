@@ -1,61 +1,62 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-################################################################################
-# Copyright 2018 ROBOTIS CO., LTD.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
-
-# Author: Leon Jung, Gilbert, Ashe Kim
-
-import rospy
+import rclpy
+from rclpy.node import Node
 import numpy as np
 import os
 import cv2
 from enum import Enum
 from std_msgs.msg import UInt8
 from sensor_msgs.msg import Image, CompressedImage
-from cv_bridge import CvBridge, CvBridgeError
+from cv_bridge import CvBridge
 
-class DetectSign():
+class DetectSign(Node):
     def __init__(self):
-        self.fnPreproc()
-        
-        self.sub_image_type = "raw" # you can choose image type "compressed", "raw"
-        self.pub_image_type = "compressed" # you can choose image type "compressed", "raw"
+        # ROS2 Node 초기화
+        super().__init__('detect_sign')
 
-        #subscribes
+        # 이미지 타입 설정
+        self.sub_image_type = "raw"  # "compressed" 또는 "raw"
+        self.pub_image_type = "compressed"  # "compressed" 또는 "raw"
+
+        # Subscriber 설정
         if self.sub_image_type == "compressed":
-            # subscribes compressed image
-            self.sub_image_original = rospy.Subscriber('/detect/image_input/compressed', CompressedImage, self.cbFindTrafficSign, queue_size = 1)
+            self.sub_image_original = self.create_subscription(
+                CompressedImage,
+                '/detect/image_input/compressed',
+                self.cbFindTrafficSign,
+                10
+            )
         elif self.sub_image_type == "raw":
-            # subscribes raw image
-            self.sub_image_original = rospy.Subscriber('/detect/image_input', Image, self.cbFindTrafficSign, queue_size = 1)
+            self.sub_image_original = self.create_subscription(
+                Image,
+                '/detect/image_input',
+                self.cbFindTrafficSign,
+                10
+            )
 
-        #publishes
-        self.pub_traffic_sign = rospy.Publisher('/detect/traffic_sign', UInt8, queue_size=1)
-
+        # Publisher 설정
+        self.pub_traffic_sign = self.create_publisher(UInt8, '/detect/traffic_sign', 10)
         if self.pub_image_type == "compressed":
-            # publishes traffic sign image in compressed type 
-            self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output/compressed', CompressedImage, queue_size = 1)
+            self.pub_image_traffic_sign = self.create_publisher(
+                CompressedImage,
+                '/detect/image_output/compressed', 10
+            )
         elif self.pub_image_type == "raw":
-            # publishes traffic sign image in raw type
-            self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
+            self.pub_image_traffic_sign = self.create_publisher(
+                Image, '/detect/image_output', 10
+            )
 
         self.cvBridge = CvBridge()
         self.TrafficSign = Enum('TrafficSign', 'intersection left right')
         self.counter = 1
+
+        # 전처리 수행
+        self.fnPreproc()
+
+        # 노드 초기화 로그
+        self.get_logger().info("DetectSign Node Initialized")
 
     def fnPreproc(self):
         # Initiate SIFT detector
@@ -101,8 +102,8 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 9 #9
-        MIN_MSE_DECISION = 50000
+        MIN_MATCH_COUNT = 8 #9
+        MIN_MSE_DECISION = 70000 #50000
 
         # find the keypoints and descriptors with SIFT
         kp1, des1 = self.sift.detectAndCompute(cv_image_input,None)
@@ -130,7 +131,7 @@ class DetectSign():
                 msg_sign.data = self.TrafficSign.intersection.value
 
                 self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("detect intersection sign")
+                self.get_logger().info("Detect intersection sign")
                 image_out_num = 2
 
         good_left = []
@@ -150,7 +151,7 @@ class DetectSign():
                 msg_sign.data = self.TrafficSign.left.value
 
                 self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("detect left sign")
+                self.get_logger().info("Detect left sign")
                 image_out_num = 3
 
         else:
@@ -174,7 +175,7 @@ class DetectSign():
                 msg_sign.data = self.TrafficSign.right.value
 
                 self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("detect right sign")
+                self.get_logger().info("Detect right sign")
                 image_out_num = 4
 
         else:
@@ -228,39 +229,33 @@ class DetectSign():
                             matchesMask = matches_right, # draw only inliers
                             flags = 2)
 
-            fianl_right = cv2.drawMatches(cv_image_input,kp1,self.img_right,self.kp_right,good_right,None,**draw_params_right)
+            final_right = cv2.drawMatches(cv_image_input,kp1,self.img_right,self.kp_right,good_right,None,**draw_params_right)
 
             if self.pub_image_type == "compressed":
                 # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(fianl_right, "jpg"))
+                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_right, "jpg"))
 
             elif self.pub_image_type == "raw":
                 # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(fianl_right, "bgr8"))
+                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_right, "bgr8"))
 
     def main(self):
-        rospy.spin()
+        rclpy.spin(self)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = DetectSign()
+    
+    try:
+        node.main()  # rclpy.spin(node) 호출
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutting down DetectSign Node cleanly...")
+    finally:
+        # 노드 자원 정리
+        if rclpy.ok():  # rclpy가 활성화되어 있는 경우에만 종료
+            node.destroy_node()
+
 
 if __name__ == '__main__':
-    rospy.init_node('detect_sign')
-    node = DetectSign()
-    node.main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    main()
