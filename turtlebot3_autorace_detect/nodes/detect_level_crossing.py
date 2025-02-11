@@ -19,22 +19,22 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
 
-import rclpy
-from rclpy.node import Node
-from rcl_interfaces.msg import ParameterDescriptor
-from rcl_interfaces.msg import IntegerRange
-from rcl_interfaces.msg import SetParametersResult
-
-import cv2
-import numpy as np
 import math
 import time
 from enum import Enum
 
-from std_msgs.msg import UInt8, Float64
-from sensor_msgs.msg import Image
-from sensor_msgs.msg import CompressedImage
+import cv2
+import numpy as np
+import rclpy
 from cv_bridge import CvBridge
+from rcl_interfaces.msg import IntegerRange
+from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.msg import SetParametersResult
+from rclpy.node import Node
+from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
+from std_msgs.msg import Float64
+from std_msgs.msg import UInt8
 
 
 def fnCalcDistanceDot2Line(a, b, c, x0, y0):

@@ -19,14 +19,19 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
 
-import rclpy
-import numpy as np
-import cv2
 import time
+
+import cv2
+import numpy as np
+import rclpy
+from cv_bridge import CvBridge
+from cv_bridge import CvBridgeError
+from rcl_interfaces.msg import IntegerRange
+from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.msg import SetParametersResult
 from rclpy.node import Node
-from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor, IntegerRange
-from sensor_msgs.msg import Image, CompressedImage
-from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
 
 
 class DetectTrafficLight(Node):

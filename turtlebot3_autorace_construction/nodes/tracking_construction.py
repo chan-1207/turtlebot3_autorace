@@ -19,13 +19,15 @@
 
 # Author: ChanHyeong Lee
 
+import cv2
 import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
-from turtlebot3_autorace_msgs.msg import Objects, Tracker
 from sklearn.cluster import DBSCAN
-import cv2
+
+from turtlebot3_autorace_msgs.msg import Objects
+from turtlebot3_autorace_msgs.msg import Tracker
 
 
 class LidarTracker(Node):
@@ -82,7 +84,6 @@ class LidarTracker(Node):
             centroid = np.mean(cluster_points, axis=0)
             if np.linalg.norm(centroid) > self.max_tracking_distance:
                 continue
-            # 회전된 최소 면적 사각형 계산
             rect = cv2.minAreaRect(cluster_points.astype(np.float32))
             width, height = rect[1]
             clusters.append((centroid[0], centroid[1], width, height))
@@ -101,13 +102,13 @@ class LidarTracker(Node):
 
         used_indices = set()
         for prev in self.previous_objects:
-            prev_x, prev_y, prev_w, prev_h, prev_id = prev
+            prev_x, prev_y, prev_id = prev
             best_index = None
             best_distance = float('inf')
             for i, cur in enumerate(clusters):
                 if i in used_indices:
                     continue
-                cur_x, cur_y, cur_w, cur_h = cur
+                cur_x, cur_y = cur
                 dist = np.sqrt((cur_x - prev_x)**2 + (cur_y - prev_y)**2)
                 if dist < best_distance:
                     best_distance = dist

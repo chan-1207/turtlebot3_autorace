@@ -19,12 +19,14 @@
 
 # Author: ChanHyeong Lee
 
-import numpy as np
+import random
+
 import cv2
+import numpy as np
 import rclpy
 from rclpy.node import Node
+
 from turtlebot3_autorace_msgs.msg import Objects
-import random
 
 
 class TrackedObjectVisualizer(Node):

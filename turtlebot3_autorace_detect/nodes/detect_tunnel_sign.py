@@ -20,16 +20,16 @@
 # Author: Leon Jung, Gilbert, Ashe Kim
 
 import os
-
-import rclpy
-from rclpy.node import Node
-import numpy as np
-import cv2
 from enum import Enum
-from std_msgs.msg import UInt8
+
+import cv2
+import numpy as np
+import rclpy
+from cv_bridge import CvBridge
+from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from std_msgs.msg import UInt8
 
 
 class DetectSign(Node):

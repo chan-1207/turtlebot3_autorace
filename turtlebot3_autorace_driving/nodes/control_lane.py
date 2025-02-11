@@ -20,9 +20,9 @@
 # Author: Leon Jung, Gilbert, Ashe Kim
 
 import rclpy
+from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from std_msgs.msg import Float64
-from geometry_msgs.msg import Twist
 
 
 class ControlLane(Node):
