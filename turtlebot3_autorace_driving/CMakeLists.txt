@@ -18,7 +18,7 @@ find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
   nodes/control_lane.py
-  DESTINATION lib/${PROJECT_NAME}    # 설치 경로
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY launch/

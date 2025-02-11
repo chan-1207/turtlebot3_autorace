@@ -3,9 +3,9 @@
 <package format="3">
   <name>turtlebot3_autorace_detect</name>
   <version>1.0.0</version>
-  <description>ROS2 port of turtlebot3_autorace_detect</description>
-  <maintainer email="junyeong4321@gmail.com">jun</maintainer>
-  <license>TODO: License declaration</license>
+  <description>ROS 2 packages for turtlebot3_autorace_detect</description>
+  <maintainer email="pyo@robotis.com">Pyo</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -14,7 +14,7 @@
   <depend>sensor_msgs</depend>
 
   <exec_depend>ament_python</exec_depend>
-  
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
