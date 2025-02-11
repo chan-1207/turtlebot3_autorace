@@ -1,31 +1,24 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>turtlebot3_autorace_detect</name>
-  <version>1.1.0</version>
-  <description>
-    AutoRace ROS packages for feature detection with TurtleBot3 Auto
-  </description>
-  <license>Apache 2.0</license>
-  <author email="ashekim@robotis.com">Ashe Kim</author>
-  <author>Ashe Kim</author>
-  <maintainer email="ashekim@robotis.com">Ashe Kim</maintainer>
-  <maintainer email="willson@robotis.com">Will Son</maintainer>
-  <url type="website">http://wiki.ros.org/turtlebot3_autorace</url>
-  <url type="emanual">http://turtlebot3.robotis.com</url>
-  <url type="repository">https://github.com/ROBOTIS-GIT/turtlebot3_autorace_2020</url>
-  <url type="bugtracker">https://github.com/ROBOTIS-GIT/turtlebot3_autorace_2020/issues</url>
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>dynamic_reconfigure</depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>move_base_msgs</exec_depend>
-  <exec_depend>tf</exec_depend>
-  <exec_depend>cv_bridge</exec_depend>
-  <exec_depend>python3-opencv</exec_depend>
-  <exec_depend>python-numpy</exec_depend>
-  <exec_depend>python-enum34</exec_depend>
-</package>
+  <version>1.0.0</version>
+  <description>ROS2 port of turtlebot3_autorace_detect</description>
+  <maintainer email="junyeong4321@gmail.com">jun</maintainer>
+  <license>TODO: License declaration</license>
 
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <exec_depend>ament_python</exec_depend>
+  
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

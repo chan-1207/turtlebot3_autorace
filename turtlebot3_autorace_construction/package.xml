@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>turtlebot3_autorace_driving</name>
+  <name>turtlebot3_autorace_construction</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="esak703@gmail.com">gyu</maintainer>
+  <maintainer email="dddoggi1207@gmail.com"></maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -12,11 +12,9 @@
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>turtlebot3_autorace_msgs</depend>
   
   <exec_depend>ament_python</exec_depend>
-
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

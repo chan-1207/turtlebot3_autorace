@@ -1,53 +1,29 @@
-################################################################################
-# Set minimum required version of cmake, project name and compile options
-################################################################################
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(turtlebot3_autorace_msgs)
 
-################################################################################
-# Find catkin packages and libraries for catkin and system dependencies
-################################################################################
-find_package(catkin REQUIRED COMPONENTS
-  std_msgs
-  message_generation
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/MovingParam.msg"
+  "msg/Objects.msg"
+  "msg/Tracker.msg"
+  DEPENDENCIES std_msgs
 )
 
-################################################################################
-# Setup for python modules and scripts
-################################################################################
+ament_export_dependencies(rosidl_default_runtime)
 
-################################################################################
-# Declare ROS messages, services and actions
-################################################################################
-add_message_files(
-  FILES
-  MovingParam.msg
-)
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
-
-################################################################################
-# Declare ROS dynamic reconfigure parameters
-################################################################################
-
-################################################################################
-# Declare catkin specific configuration to be passed to dependent projects
-################################################################################
-catkin_package(
-  CATKIN_DEPENDS std_msgs message_runtime
-)
-
-################################################################################
-# Build
-################################################################################
-
-################################################################################
-# Install
-################################################################################
-
-################################################################################
-# Test
-################################################################################
+ament_package()
