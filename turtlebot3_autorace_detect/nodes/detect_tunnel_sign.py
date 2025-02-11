@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Author: Leon Jung, Gilbert, Ashe Kim
+
+import os
+
 import rclpy
 from rclpy.node import Node
 import numpy as np
-import os
 import cv2
 from enum import Enum
 from std_msgs.msg import UInt8
-from sensor_msgs.msg import Image, CompressedImage
-from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+
 
 class DetectSign(Node):
     def __init__(self):
         super().__init__('detect_sign')
 
-        self.sub_image_type = "raw" # you can choose image type "compressed", "raw"
-        self.pub_image_type = "compressed" # you can choose image type "compressed", "raw"
+        self.sub_image_type = "raw"  # you can choose image type "compressed", "raw"
+        self.pub_image_type = "compressed"  # you can choose image type "compressed", "raw"
 
-        #subscribes
         if self.sub_image_type == "compressed":
-            # subscribes compressed image
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/detect/image_input/compressed',
@@ -28,7 +47,6 @@ class DetectSign(Node):
                 10
             )
         elif self.sub_image_type == "raw":
-            # subscribes raw image
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/detect/image_input',
@@ -36,16 +54,13 @@ class DetectSign(Node):
                 10
             )
 
-        #publishes
         self.pub_traffic_sign = self.create_publisher(UInt8, '/detect/traffic_sign', 10)
         if self.pub_image_type == "compressed":
-            # publishes traffic sign image in compressed type 
             self.pub_image_traffic_sign = self.create_publisher(
                 CompressedImage,
                 '/detect/image_output/compressed', 10
             )
         elif self.pub_image_type == "raw":
-            # publishes traffic sign image in raw type
             self.pub_image_traffic_sign = self.create_publisher(
                 Image, '/detect/image_output', 10
             )
@@ -63,27 +78,30 @@ class DetectSign(Node):
         self.sift = cv2.SIFT_create()
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        dir_path = dir_path.replace('turtlebot3_autorace_detect/nodes', 'turtlebot3_autorace_detect/')
+        dir_path = dir_path.replace(
+            'turtlebot3_autorace_detect/nodes', 'turtlebot3_autorace_detect/'
+        )
         dir_path += 'image/'
 
-        self.img_tunnel = cv2.imread(dir_path + 'tunnel.png',0)       # trainImage3
-        self.kp_tunnel, self.des_tunnel = self.sift.detectAndCompute(self.img_tunnel,None)
+        self.img_tunnel = cv2.imread(dir_path + 'tunnel.png', 0)  # trainImage3
+        self.kp_tunnel, self.des_tunnel = self.sift.detectAndCompute(self.img_tunnel, None)
 
         FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        search_params = dict(checks = 50)
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
 
         self.flann = cv2.FlannBasedMatcher(index_params, search_params)
 
     def fnCalcMSE(self, arr1, arr2):
-            squared_diff = (arr1 - arr2) ** 2
-            sum = np.sum(squared_diff)
-            num_all = arr1.shape[0] * arr1.shape[1] #cv_image_input and 2 should have same shape
-            err = sum / num_all
-            return err
+        squared_diff = (arr1 - arr2) ** 2
+        sum = np.sum(squared_diff)
+        num_all = arr1.shape[0] * arr1.shape[1]  # cv_image_input and 2 should have same shape
+        err = sum / num_all
+        return err
 
     def cbFindTrafficSign(self, image_msg):
-        # drop the frame to 1/5 (6fps) because of the processing speed. This is up to your computer's operating power.
+        # drop the frame to 1/5 (6fps) because of the processing speed.
+        # This is up to your computer's operating power.
         if self.counter % 3 != 0:
             self.counter += 1
             return
@@ -91,7 +109,7 @@ class DetectSign(Node):
             self.counter = 1
 
         if self.sub_image_type == "compressed":
-            #converting compressed image to opencv image
+            # converting compressed image to opencv image
             np_arr = np.frombuffer(image_msg.data, np.uint8)
             cv_image_input = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         elif self.sub_image_type == "raw":
@@ -101,20 +119,24 @@ class DetectSign(Node):
         MIN_MSE_DECISION = 50000
 
         # find the keypoints and descriptors with SIFT
-        kp1, des1 = self.sift.detectAndCompute(cv_image_input,None)
-        matches_tunnel = self.flann.knnMatch(des1,self.des_tunnel,k=2)
+        kp1, des1 = self.sift.detectAndCompute(cv_image_input, None)
+        matches_tunnel = self.flann.knnMatch(des1, self.des_tunnel, k=2)
 
         image_out_num = 1
 
         good_tunnel = []
-        for m,n in matches_tunnel:
+        for m, n in matches_tunnel:
             if m.distance < 0.7*n.distance:
                 good_tunnel.append(m)
-        if len(good_tunnel)>MIN_MATCH_COUNT:
-            src_pts = np.float32([ kp1[m.queryIdx].pt for m in good_tunnel ]).reshape(-1,1,2)
-            dst_pts = np.float32([ self.kp_tunnel[m.trainIdx].pt for m in good_tunnel ]).reshape(-1,1,2)
+        if len(good_tunnel) > MIN_MATCH_COUNT:
+            src_pts = np.float32([
+                kp1[m.queryIdx].pt for m in good_tunnel
+            ]).reshape(-1, 1, 2)
+            dst_pts = np.float32([
+                self.kp_tunnel[m.trainIdx].pt for m in good_tunnel
+            ]).reshape(-1, 1, 2)
 
-            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             matchesMask_tunnel = mask.ravel().tolist()
 
             mse = self.fnCalcMSE(src_pts, dst_pts)
@@ -126,36 +148,54 @@ class DetectSign(Node):
 
                 self.get_logger().info("tunnel")
                 image_out_num = 4
-
         else:
             matchesMask_tunnel = None
             # self.get_logger().info("nothing")
 
-
         if image_out_num == 1:
             if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_input, "jpg"))
-
+                self.pub_image_traffic_sign.publish(
+                    self.cvBridge.cv2_to_compressed_imgmsg(
+                        cv_image_input, "jpg"
+                    )
+                )
             elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
-
+                self.pub_image_traffic_sign.publish(
+                    self.cvBridge.cv2_to_imgmsg(
+                        cv_image_input, "bgr8"
+                    )
+                )
         elif image_out_num == 4:
-            draw_params_tunnel = dict(matchColor = (255,0,0), # draw matches in green color
-                            singlePointColor = None,
-                            matchesMask = matchesMask_tunnel, # draw only inliers
-                            flags = 2)
+            draw_params_tunnel = dict(
+                matchColor=(255, 0, 0),  # draw matches in green color
+                singlePointColor=None,
+                matchesMask=matchesMask_tunnel,  # draw only inliers
+                flags=2
+            )
 
-            final_tunnel = cv2.drawMatches(cv_image_input,kp1,self.img_tunnel,self.kp_tunnel,good_tunnel,None,**draw_params_tunnel)
+            final_tunnel = cv2.drawMatches(
+                cv_image_input,
+                kp1,
+                self.img_tunnel,
+                self.kp_tunnel,
+                good_tunnel,
+                None,
+                **draw_params_tunnel
+            )
 
             if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_tunnel, "jpg"))
-
+                self.pub_image_traffic_sign.publish(
+                    self.cvBridge.cv2_to_compressed_imgmsg(
+                        final_tunnel, "jpg"
+                    )
+                )
             elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_tunnel, "bgr8"))
+                self.pub_image_traffic_sign.publish(
+                    self.cvBridge.cv2_to_imgmsg(
+                        final_tunnel, "bgr8"
+                    )
+                )
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -163,6 +203,7 @@ def main(args=None):
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
