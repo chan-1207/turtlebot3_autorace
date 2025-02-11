@@ -3,9 +3,9 @@
 <package format="3">
   <name>turtlebot3_autorace_construction</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>ROS 2 packages for turtlebot3_autorace_construction</description>
   <maintainer email="dddoggi1207@gmail.com"></maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -13,8 +13,11 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>turtlebot3_autorace_msgs</depend>
-  
+
   <exec_depend>ament_python</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

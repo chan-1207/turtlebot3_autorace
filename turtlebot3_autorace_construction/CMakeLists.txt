@@ -14,7 +14,7 @@ find_package(sensor_msgs REQUIRED)
 install(PROGRAMS
   nodes/tracking_construction.py
   nodes/tracked_construction_visualization.py
-  DESTINATION lib/${PROJECT_NAME}    # 설치 경로
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY launch/

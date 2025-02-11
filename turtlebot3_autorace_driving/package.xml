@@ -3,9 +3,9 @@
 <package format="3">
   <name>turtlebot3_autorace_driving</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="esak703@gmail.com">gyu</maintainer>
-  <license>TODO: License declaration</license>
+  <description>ROS 2 packages for turtlebot3_autorace_driving</description>
+  <maintainer email="pyo@robotis.com">Pyo</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
