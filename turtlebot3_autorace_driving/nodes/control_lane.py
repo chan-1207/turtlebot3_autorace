@@ -18,25 +18,33 @@
 ################################################################################
 
 # Author: Leon Jung, Gilbert, Ashe Kim
- 
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Twist
-import atexit
+
 
 class ControlLane(Node):
     def __init__(self):
         super().__init__('control_lane')
-        self.sub_lane = self.create_subscription(Float64, '/control/lane', self.cbFollowLane, 1)
-        self.sub_max_vel = self.create_subscription(Float64, '/control/max_vel', self.cbGetMaxVel, 1)
+        self.sub_lane = self.create_subscription(
+            Float64,
+            '/control/lane',
+            self.cbFollowLane,
+            1
+        )
+        self.sub_max_vel = self.create_subscription(
+            Float64,
+            '/control/max_vel',
+            self.cbGetMaxVel,
+            1
+        )
         self.pub_cmd_vel = self.create_publisher(Twist, '/control/cmd_vel', 1)
 
         self.lastError = 0
         self.MAX_VEL = 0.1
 
-        #self.shut(self.fnShutDown)
-        #atexit.register(self.fnShutDown)
     def cbGetMaxVel(self, max_vel_msg):
         self.MAX_VEL = max_vel_msg.data
 
@@ -50,9 +58,9 @@ class ControlLane(Node):
 
         angular_z = Kp * error + Kd * (error - self.lastError)
         self.lastError = error
-        
+
         twist = Twist()
-        # twist.linear.x = 0.05        
+        # twist.linear.x = 0.05
         twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), 0.05)
         twist.linear.y = 0.0
         twist.linear.z = 0.0
@@ -64,7 +72,6 @@ class ControlLane(Node):
     def fnShutDown(self):
         self.get_logger().info("Shutting down. cmd_vel will be 0")
 
-
         twist = Twist()
         twist.linear.x = 0.0
         twist.linear.y = 0.0
@@ -72,14 +79,16 @@ class ControlLane(Node):
         twist.angular.x = 0.0
         twist.angular.y = 0.0
         twist.angular.z = 0.0
-        self.pub_cmd_vel.publish(twist) 
+        self.pub_cmd_vel.publish(twist)
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = ControlLane()
-    rclpy.spin(node)    
+    rclpy.spin(node)
     node.destroy_node()
-    rclpy.shutdown() 
+    rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
