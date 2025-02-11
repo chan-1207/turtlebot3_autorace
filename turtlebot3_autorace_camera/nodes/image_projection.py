@@ -1,13 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Authors: Leon Jung, [AuTURBO] Ki Hoon Kim (https://github.com/auturbo), Gilbert
+
 import rclpy
 from rclpy.node import Node
 import numpy as np
 import cv2
-from sensor_msgs.msg import Image, CompressedImage
+from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from rcl_interfaces.msg import ParameterDescriptor, IntegerRange, SetParametersResult
+from rcl_interfaces.msg import IntegerRange
+from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.msg import SetParametersResult
 
 
 class ImageProjection(Node):
@@ -29,7 +50,7 @@ class ImageProjection(Node):
                     to_value=320,
                     step=1)]
         )
-       
+
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -56,11 +77,10 @@ class ImageProjection(Node):
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.cbGetImageProjectionParam)
 
-        self.sub_image_type = "compressed" # "compressed" / "raw"
-        self.pub_image_type = "raw"        # "compressed" / "raw"
+        self.sub_image_type = "compressed"  # you can choose image type "compressed", "raw"
+        self.pub_image_type = "raw"  # you can choose image type "compressed", "raw"
 
         if self.sub_image_type == "compressed":
-            # subscribes compressed image
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/camera/image_input/compressed',
@@ -68,7 +88,6 @@ class ImageProjection(Node):
                 1
             )
         elif self.sub_image_type == "raw":
-            # subscribes raw image
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/camera/image_input',
@@ -77,26 +96,22 @@ class ImageProjection(Node):
             )
 
         if self.pub_image_type == "compressed":
-            # publishes ground-project image in compressed type
             self.pub_image_projected = self.create_publisher(
                 CompressedImage,
                 '/camera/image_output/compressed',
                 1
             )
         elif self.pub_image_type == "raw":
-            # publishes ground-project image in raw type
             self.pub_image_projected = self.create_publisher(Image, '/camera/image_output', 1)
 
         if self.is_calibration_mode:
             if self.pub_image_type == "compressed":
-                # publishes calibration image in compressed type
                 self.pub_image_calib = self.create_publisher(
                     CompressedImage,
                     '/camera/image_calib/compressed',
                     1
                 )
             elif self.pub_image_type == "raw":
-                # publishes calibration image in raw type
                 self.pub_image_calib = self.create_publisher(
                     Image,
                     '/camera/image_calib',
@@ -126,11 +141,9 @@ class ImageProjection(Node):
 
     def cbImageProjection(self, msg_img):
         if self.sub_image_type == "compressed":
-            # converts compressed image to opencv image
             np_image_original = np.frombuffer(msg_img.data, np.uint8)
             cv_image_original = cv2.imdecode(np_image_original, cv2.IMREAD_COLOR)
         elif self.sub_image_type == "raw":
-            # converts raw image to opencv image
             cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, "bgr8")
 
         # setting homography variables
@@ -174,14 +187,11 @@ class ImageProjection(Node):
             )
 
             if self.pub_image_type == "compressed":
-                # publishes calibration image in compressed type
                 self.pub_image_calib.publish(
                     self.cvBridge.cv2_to_compressed_imgmsg(
                         cv_image_calib,
                         "jpg"))
-
             elif self.pub_image_type == "raw":
-                # publishes calibration image in raw type
                 self.pub_image_calib.publish(self.cvBridge.cv2_to_imgmsg(cv_image_calib, "bgr8"))
 
         # adding Gaussian blur to the image of original
@@ -209,23 +219,29 @@ class ImageProjection(Node):
         triangle1 = np.array([[0, 599], [0, 340], [200, 599]], np.int32)
         triangle2 = np.array([[999, 599], [999, 340], [799, 599]], np.int32)
         black = (0, 0, 0)
-        white = (255, 255, 255)
         cv_image_homography = cv2.fillPoly(cv_image_homography, [triangle1, triangle2], black)
 
         if self.pub_image_type == "compressed":
-            # publishes ground-project image in compressed type
-            self.pub_image_projected.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_homography, "jpg"))
-
+            self.pub_image_projected.publish(
+                self.cvBridge.cv2_to_compressed_imgmsg(
+                    cv_image_homography, "jpg"
+                )
+            )
         elif self.pub_image_type == "raw":
-            # publishes ground-project image in raw type
-            self.pub_image_projected.publish(self.cvBridge.cv2_to_imgmsg(cv_image_homography, "bgr8"))
+            self.pub_image_projected.publish(
+                self.cvBridge.cv2_to_imgmsg(
+                    cv_image_homography, "bgr8"
+                )
+            )
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = ImageProjection()
-    rclpy.spin(node)    
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
