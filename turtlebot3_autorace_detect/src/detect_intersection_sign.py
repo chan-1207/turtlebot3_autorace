@@ -19,13 +19,13 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
 
-import os
 from enum import Enum
+import os
 
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 import rclpy
-from cv_bridge import CvBridge
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
 from sensor_msgs.msg import Image
@@ -94,16 +94,22 @@ class DetectSign(Node):
         self.kp_right, self.des_right = self.sift.detectAndCompute(self.img_right, None)
 
         FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-        search_params = dict(checks=50)
+        index_params = {
+            'algorithm': FLANN_INDEX_KDTREE,
+            'trees': 5
+        }
+
+        search_params = {
+            'checks': 50
+        }
 
         self.flann = cv2.FlannBasedMatcher(index_params, search_params)
 
     def fnCalcMSE(self, arr1, arr2):
         squared_diff = (arr1 - arr2) ** 2
-        sum = np.sum(squared_diff)
+        total_sum = np.sum(squared_diff)
         num_all = arr1.shape[0] * arr1.shape[1]  # cv_image_input and 2 should have same shape
-        err = sum / num_all
+        err = total_sum / num_all
         return err
 
     def cbFindTrafficSign(self, image_msg):
@@ -219,13 +225,12 @@ class DetectSign(Node):
                     )
                 )
         elif image_out_num == 2:
-            draw_params_intersection = dict(
-                matchColor=(255, 0, 0),  # draw matches in green color
-                singlePointColor=None,
-                matchesMask=matches_intersection,  # draw only inliers
-                flags=2
-            )
-
+            draw_params_intersection = {
+                'matchColor': (255, 0, 0),  # draw matches in green color
+                'singlePointColor': None,
+                'matchesMask': matches_intersection,  # draw only inliers
+                'flags': 2
+            }
             final_intersection = cv2.drawMatches(
                 cv_image_input,
                 kp1,
@@ -249,12 +254,12 @@ class DetectSign(Node):
                     )
                 )
         elif image_out_num == 3:
-            draw_params_left = dict(
-                matchColor=(255, 0, 0),  # draw matches in green color
-                singlePointColor=None,
-                matchesMask=matches_left,  # draw only inliers
-                flags=2
-            )
+            draw_params_left = {
+                'matchColor': (255, 0, 0),  # draw matches in green color
+                'singlePointColor': None,
+                'matchesMask': matches_left,  # draw only inliers
+                'flags': 2
+            }
 
             final_left = cv2.drawMatches(
                 cv_image_input,
@@ -280,13 +285,12 @@ class DetectSign(Node):
                     )
                 )
         elif image_out_num == 4:
-            draw_params_right = dict(
-                matchColor=(255, 0, 0),  # draw matches in green color
-                singlePointColor=None,
-                matchesMask=matches_right,  # draw only inliers
-                flags=2
-            )
-
+            draw_params_right = {
+                'matchColor': (255, 0, 0),  # draw matches in green color
+                'singlePointColor': None,
+                'matchesMask': matches_right,  # draw only inliers
+                'flags': 2
+            }
             final_right = cv2.drawMatches(
                 cv_image_input,
                 kp1,

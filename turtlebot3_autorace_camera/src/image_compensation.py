@@ -20,9 +20,9 @@
 # Author: Leon Jung
 
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 import rclpy
-from cv_bridge import CvBridge
 from rcl_interfaces.msg import FloatingPointRange
 from rcl_interfaces.msg import ParameterDescriptor
 from rcl_interfaces.msg import SetParametersResult
@@ -130,9 +130,9 @@ class ImageCompensation(Node):
 
             accumulator = np.cumsum(hist)
 
-            max = accumulator[hist_size - 1]
+            total_max = accumulator[hist_size - 1]
 
-            clip_hist_percent *= (max / 100.)
+            clip_hist_percent *= (total_max / 100.)
             clip_hist_percent /= 2.
 
             min_gray = 0
@@ -140,7 +140,7 @@ class ImageCompensation(Node):
                 min_gray += 1
 
             max_gray = hist_size - 1
-            while accumulator[max_gray] >= (max - clip_hist_percent):
+            while accumulator[max_gray] >= (total_max - clip_hist_percent):
                 max_gray -= 1
 
         input_range = max_gray - min_gray
