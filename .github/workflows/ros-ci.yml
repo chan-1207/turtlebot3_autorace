@@ -53,7 +53,7 @@ jobs:
         uses: ros-tooling/action-ros-ci@v0.3
 
         with:
-          target-ros1-distro: ${{ matrix.ros_distribution }}
+          target-ros2-distro: ${{ matrix.ros_distribution }}
           vcs-repo-file-url: ""
           package-name: |
             turtlebot3_autorace_2020
