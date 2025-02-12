@@ -79,7 +79,7 @@ class DetectSign(Node):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         dir_path = dir_path.replace(
-            'turtlebot3_autorace_detect/nodes', 'turtlebot3_autorace_detect/'
+            'turtlebot3_autorace_detect/src/turtlebot3_autorace_detect', 'turtlebot3_autorace_detect/'
         )
         dir_path += 'image/'
 
