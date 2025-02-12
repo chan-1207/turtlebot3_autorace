@@ -32,6 +32,7 @@ from sensor_msgs.msg import Image
 
 
 class ImageProjection(Node):
+
     def __init__(self):
         super().__init__('image_projection')
         parameter_descriptor_top = ParameterDescriptor(

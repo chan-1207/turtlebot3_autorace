@@ -33,6 +33,7 @@ from std_msgs.msg import UInt8
 
 
 class DetectSign(Node):
+
     def __init__(self):
         super().__init__('detect_sign')
 

@@ -32,6 +32,7 @@ from sensor_msgs.msg import Image
 
 
 class ImageCompensation(Node):
+
     def __init__(self):
         super().__init__('image_compensation')
         parameter_descriptor_clip_hist = ParameterDescriptor(
