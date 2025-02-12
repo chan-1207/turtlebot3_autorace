@@ -4,14 +4,14 @@
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -62,17 +62,17 @@ class ImageCompensation(Node):
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.param_update_callback)
 
-        self.sub_image_type = "compressed"  # "compressed" / "raw"
-        self.pub_image_type = "raw"  # "compressed" / "raw"
+        self.sub_image_type = 'compressed'  # 'compressed' / 'raw'
+        self.pub_image_type = 'raw'  # 'compressed' / 'raw'
 
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/camera/image_input/compressed',
                 self.cbImageCompensation,
                 10
             )
-        elif self.sub_image_type == "raw":
+        elif self.sub_image_type == 'raw':
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/camera/image_input',
@@ -80,13 +80,13 @@ class ImageCompensation(Node):
                 10
             )
 
-        if self.pub_image_type == "compressed":
+        if self.pub_image_type == 'compressed':
             self.pub_image_compensated = self.create_publisher(
                 CompressedImage,
                 '/camera/image_output/compressed',
                 10
             )
-        elif self.pub_image_type == "raw":
+        elif self.pub_image_type == 'raw':
             self.pub_image_compensated = self.create_publisher(
                 Image,
                 '/camera/image_output',
@@ -97,20 +97,20 @@ class ImageCompensation(Node):
 
     def param_update_callback(self, parameters):
         for param in parameters:
-            self.get_logger().info(f"Parameter name: {param.name}")
-            self.get_logger().info(f"Parameter value: {param.value}")
-            self.get_logger().info(f"Parameter type: {param.type_}")
+            self.get_logger().info(f'Parameter name: {param.name}')
+            self.get_logger().info(f'Parameter value: {param.value}')
+            self.get_logger().info(f'Parameter type: {param.type_}')
             if param.name == 'camera.extrinsic_camera_calibration.clip_hist_percent':
                 self.clip_hist_percent = param.value
-        self.get_logger().info(f"change: {self.clip_hist_percent}")
+        self.get_logger().info(f'change: {self.clip_hist_percent}')
         return SetParametersResult(successful=True)
 
     def cbImageCompensation(self, msg_img):
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             np_image_original = np.frombuffer(msg_img.data, np.uint8)
             cv_image_original = cv2.imdecode(np_image_original, cv2.IMREAD_COLOR)
-        elif self.sub_image_type == "raw":
-            cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, "bgr8")
+        elif self.sub_image_type == 'raw':
+            cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, 'bgr8')
 
         cv_image_compensated = np.copy(cv_image_original)
 
@@ -150,16 +150,16 @@ class ImageCompensation(Node):
 
         cv_image_compensated = cv2.convertScaleAbs(cv_image_compensated, -1, alpha, beta)
 
-        if self.pub_image_type == "compressed":
+        if self.pub_image_type == 'compressed':
             self.pub_image_compensated.publish(
                 self.cvBridge.cv2_to_compressed_imgmsg(
-                    cv_image_compensated, "jpg"
+                    cv_image_compensated, 'jpg'
                 )
             )
-        elif self.pub_image_type == "raw":
+        elif self.pub_image_type == 'raw':
             self.pub_image_compensated.publish(
                 self.cvBridge.cv2_to_imgmsg(
-                    cv_image_compensated, "bgr8"
+                    cv_image_compensated, 'bgr8'
                 )
             )
 

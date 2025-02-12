@@ -4,14 +4,14 @@
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -36,17 +36,17 @@ class DetectSign(Node):
     def __init__(self):
         super().__init__('detect_sign')
 
-        self.sub_image_type = "raw"  # you can choose image type "compressed", "raw"
-        self.pub_image_type = "compressed"  # you can choose image type "compressed", "raw"
+        self.sub_image_type = 'raw'  # you can choose image type 'compressed', 'raw'
+        self.pub_image_type = 'compressed'  # you can choose image type 'compressed', 'raw'
 
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/detect/image_input/compressed',
                 self.cbFindTrafficSign,
                 10
             )
-        elif self.sub_image_type == "raw":
+        elif self.sub_image_type == 'raw':
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/detect/image_input',
@@ -55,12 +55,12 @@ class DetectSign(Node):
             )
 
         self.pub_traffic_sign = self.create_publisher(UInt8, '/detect/traffic_sign', 10)
-        if self.pub_image_type == "compressed":
+        if self.pub_image_type == 'compressed':
             self.pub_image_traffic_sign = self.create_publisher(
                 CompressedImage,
                 '/detect/image_output/compressed', 10
             )
-        elif self.pub_image_type == "raw":
+        elif self.pub_image_type == 'raw':
             self.pub_image_traffic_sign = self.create_publisher(
                 Image, '/detect/image_output', 10
             )
@@ -71,7 +71,7 @@ class DetectSign(Node):
 
         self.fnPreproc()
 
-        self.get_logger().info("DetectSign Node Initialized")
+        self.get_logger().info('DetectSign Node Initialized')
 
     def fnPreproc(self):
         # Initiate SIFT detector
@@ -108,12 +108,12 @@ class DetectSign(Node):
         else:
             self.counter = 1
 
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             # converting compressed image to opencv image
             np_arr = np.frombuffer(image_msg.data, np.uint8)
             cv_image_input = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        elif self.sub_image_type == "raw":
-            cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
+        elif self.sub_image_type == 'raw':
+            cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, 'bgr8')
 
         MIN_MATCH_COUNT = 5
         MIN_MSE_DECISION = 50000
@@ -146,23 +146,23 @@ class DetectSign(Node):
 
                 self.pub_traffic_sign.publish(msg_sign)
 
-                self.get_logger().info("tunnel")
+                self.get_logger().info('tunnel')
                 image_out_num = 4
         else:
             matchesMask_tunnel = None
-            # self.get_logger().info("nothing")
+            # self.get_logger().info('nothing')
 
         if image_out_num == 1:
-            if self.pub_image_type == "compressed":
+            if self.pub_image_type == 'compressed':
                 self.pub_image_traffic_sign.publish(
                     self.cvBridge.cv2_to_compressed_imgmsg(
-                        cv_image_input, "jpg"
+                        cv_image_input, 'jpg'
                     )
                 )
-            elif self.pub_image_type == "raw":
+            elif self.pub_image_type == 'raw':
                 self.pub_image_traffic_sign.publish(
                     self.cvBridge.cv2_to_imgmsg(
-                        cv_image_input, "bgr8"
+                        cv_image_input, 'bgr8'
                     )
                 )
         elif image_out_num == 4:
@@ -183,16 +183,16 @@ class DetectSign(Node):
                 **draw_params_tunnel
             )
 
-            if self.pub_image_type == "compressed":
+            if self.pub_image_type == 'compressed':
                 self.pub_image_traffic_sign.publish(
                     self.cvBridge.cv2_to_compressed_imgmsg(
-                        final_tunnel, "jpg"
+                        final_tunnel, 'jpg'
                     )
                 )
-            elif self.pub_image_type == "raw":
+            elif self.pub_image_type == 'raw':
                 self.pub_image_traffic_sign.publish(
                     self.cvBridge.cv2_to_imgmsg(
-                        final_tunnel, "bgr8"
+                        final_tunnel, 'bgr8'
                     )
                 )
 

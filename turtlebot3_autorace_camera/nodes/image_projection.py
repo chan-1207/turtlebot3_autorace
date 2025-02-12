@@ -4,14 +4,14 @@
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -63,31 +63,31 @@ class ImageProjection(Node):
         )
 
         self.top_x = self.get_parameter(
-            "camera.extrinsic_camera_calibration.top_x").get_parameter_value().integer_value
+            'camera.extrinsic_camera_calibration.top_x').get_parameter_value().integer_value
         self.top_y = self.get_parameter(
-            "camera.extrinsic_camera_calibration.top_y").get_parameter_value().integer_value
+            'camera.extrinsic_camera_calibration.top_y').get_parameter_value().integer_value
         self.bottom_x = self.get_parameter(
-            "camera.extrinsic_camera_calibration.bottom_x").get_parameter_value().integer_value
+            'camera.extrinsic_camera_calibration.bottom_x').get_parameter_value().integer_value
         self.bottom_y = self.get_parameter(
-            "camera.extrinsic_camera_calibration.bottom_y").get_parameter_value().integer_value
+            'camera.extrinsic_camera_calibration.bottom_y').get_parameter_value().integer_value
 
         self.is_calibration_mode = self.get_parameter(
-            "is_extrinsic_camera_calibration_mode").get_parameter_value().bool_value
+            'is_extrinsic_camera_calibration_mode').get_parameter_value().bool_value
 
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.cbGetImageProjectionParam)
 
-        self.sub_image_type = "compressed"  # you can choose image type "compressed", "raw"
-        self.pub_image_type = "raw"  # you can choose image type "compressed", "raw"
+        self.sub_image_type = 'compressed'  # you can choose image type 'compressed', 'raw'
+        self.pub_image_type = 'raw'  # you can choose image type 'compressed', 'raw'
 
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             self.sub_image_original = self.create_subscription(
                 CompressedImage,
                 '/camera/image_input/compressed',
                 self.cbImageProjection,
                 1
             )
-        elif self.sub_image_type == "raw":
+        elif self.sub_image_type == 'raw':
             self.sub_image_original = self.create_subscription(
                 Image,
                 '/camera/image_input',
@@ -95,23 +95,23 @@ class ImageProjection(Node):
                 1
             )
 
-        if self.pub_image_type == "compressed":
+        if self.pub_image_type == 'compressed':
             self.pub_image_projected = self.create_publisher(
                 CompressedImage,
                 '/camera/image_output/compressed',
                 1
             )
-        elif self.pub_image_type == "raw":
+        elif self.pub_image_type == 'raw':
             self.pub_image_projected = self.create_publisher(Image, '/camera/image_output', 1)
 
         if self.is_calibration_mode:
-            if self.pub_image_type == "compressed":
+            if self.pub_image_type == 'compressed':
                 self.pub_image_calib = self.create_publisher(
                     CompressedImage,
                     '/camera/image_calib/compressed',
                     1
                 )
-            elif self.pub_image_type == "raw":
+            elif self.pub_image_type == 'raw':
                 self.pub_image_calib = self.create_publisher(
                     Image,
                     '/camera/image_calib',
@@ -122,9 +122,9 @@ class ImageProjection(Node):
 
     def cbGetImageProjectionParam(self, parameters):
         for param in parameters:
-            self.get_logger().info(f"Parameter name: {param.name}")
-            self.get_logger().info(f"Parameter value: {param.value}")
-            self.get_logger().info(f"Parameter type: {param.type_}")
+            self.get_logger().info(f'Parameter name: {param.name}')
+            self.get_logger().info(f'Parameter value: {param.value}')
+            self.get_logger().info(f'Parameter type: {param.type_}')
             if param.name == 'camera.extrinsic_camera_calibration.top_x':
                 self.top_x = param.value
             if param.name == 'camera.extrinsic_camera_calibration.top_y':
@@ -133,18 +133,18 @@ class ImageProjection(Node):
                 self.bottom_x = param.value
             if param.name == 'camera.extrinsic_camera_calibration.bottom_y':
                 self.bottom_y = param.value
-        self.get_logger().info(f"change: {self.top_x}")
-        self.get_logger().info(f"change: {self.top_y}")
-        self.get_logger().info(f"change: {self.bottom_x}")
-        self.get_logger().info(f"change: {self.bottom_y}")
+        self.get_logger().info(f'change: {self.top_x}')
+        self.get_logger().info(f'change: {self.top_y}')
+        self.get_logger().info(f'change: {self.bottom_x}')
+        self.get_logger().info(f'change: {self.bottom_y}')
         return SetParametersResult(successful=True)
 
     def cbImageProjection(self, msg_img):
-        if self.sub_image_type == "compressed":
+        if self.sub_image_type == 'compressed':
             np_image_original = np.frombuffer(msg_img.data, np.uint8)
             cv_image_original = cv2.imdecode(np_image_original, cv2.IMREAD_COLOR)
-        elif self.sub_image_type == "raw":
-            cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, "bgr8")
+        elif self.sub_image_type == 'raw':
+            cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, 'bgr8')
 
         # setting homography variables
         top_x = self.top_x
@@ -186,13 +186,13 @@ class ImageProjection(Node):
                 1
             )
 
-            if self.pub_image_type == "compressed":
+            if self.pub_image_type == 'compressed':
                 self.pub_image_calib.publish(
                     self.cvBridge.cv2_to_compressed_imgmsg(
                         cv_image_calib,
-                        "jpg"))
-            elif self.pub_image_type == "raw":
-                self.pub_image_calib.publish(self.cvBridge.cv2_to_imgmsg(cv_image_calib, "bgr8"))
+                        'jpg'))
+            elif self.pub_image_type == 'raw':
+                self.pub_image_calib.publish(self.cvBridge.cv2_to_imgmsg(cv_image_calib, 'bgr8'))
 
         # adding Gaussian blur to the image of original
         cv_image_original = cv2.GaussianBlur(cv_image_original, (5, 5), 0)
@@ -221,16 +221,16 @@ class ImageProjection(Node):
         black = (0, 0, 0)
         cv_image_homography = cv2.fillPoly(cv_image_homography, [triangle1, triangle2], black)
 
-        if self.pub_image_type == "compressed":
+        if self.pub_image_type == 'compressed':
             self.pub_image_projected.publish(
                 self.cvBridge.cv2_to_compressed_imgmsg(
-                    cv_image_homography, "jpg"
+                    cv_image_homography, 'jpg'
                 )
             )
-        elif self.pub_image_type == "raw":
+        elif self.pub_image_type == 'raw':
             self.pub_image_projected.publish(
                 self.cvBridge.cv2_to_imgmsg(
-                    cv_image_homography, "bgr8"
+                    cv_image_homography, 'bgr8'
                 )
             )
 
