@@ -283,7 +283,7 @@ class DetectLane(Node):
                 self.mov_avg_right = np.append(
                     self.mov_avg_right, np.array([self.right_fit]), axis=0
                 )
-        except:
+        except (ValueError, TypeError, AttributeError):
             if yellow_fraction > 3000:
                 self.left_fitx, self.left_fit = self.sliding_windown(cv_yellow_lane, 'left')
                 self.mov_avg_left = np.array([self.left_fit])
@@ -552,7 +552,7 @@ class DetectLane(Node):
         try:
             lane_fit = np.polyfit(y, x, 2)
             self.lane_fit_bef = lane_fit
-        except:
+        except (np.linalg.LinAlgError, ValueError):
             lane_fit = self.lane_fit_bef
 
         # Generate x and y values for plotting
