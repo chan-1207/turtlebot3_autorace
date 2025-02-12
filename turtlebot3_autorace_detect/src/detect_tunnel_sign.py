@@ -94,9 +94,9 @@ class DetectSign(Node):
 
     def fnCalcMSE(self, arr1, arr2):
         squared_diff = (arr1 - arr2) ** 2
-        sum = np.sum(squared_diff)
+        total_sum = np.sum(squared_diff)
         num_all = arr1.shape[0] * arr1.shape[1]  # cv_image_input and 2 should have same shape
-        err = sum / num_all
+        err = total_sum / num_all
         return err
 
     def cbFindTrafficSign(self, image_msg):
@@ -166,12 +166,12 @@ class DetectSign(Node):
                     )
                 )
         elif image_out_num == 4:
-            draw_params_tunnel = dict(
-                matchColor=(255, 0, 0),  # draw matches in green color
-                singlePointColor=None,
-                matchesMask=matchesMask_tunnel,  # draw only inliers
-                flags=2
-            )
+            draw_params_tunnel = {
+                "matchColor": (255, 0, 0),  # draw matches in green color
+                "singlePointColor": None,
+                "matchesMask": matchesMask_tunnel,  # draw only inliers
+                "flags": 2,
+            }
 
             final_tunnel = cv2.drawMatches(
                 cv_image_input,

@@ -19,8 +19,8 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
 
-import rclpy
 from geometry_msgs.msg import Twist
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
 
