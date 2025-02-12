@@ -19,13 +19,13 @@
 
 # Author: Leon Jung, Gilbert, Ashe Kim
 
-import os
 from enum import Enum
+import os
 
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 import rclpy
-from cv_bridge import CvBridge
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
 from sensor_msgs.msg import Image
@@ -87,8 +87,14 @@ class DetectSign(Node):
         self.kp_tunnel, self.des_tunnel = self.sift.detectAndCompute(self.img_tunnel, None)
 
         FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-        search_params = dict(checks=50)
+        index_params = {
+            'algorithm': FLANN_INDEX_KDTREE,
+            'trees': 5
+        }
+
+        search_params = {
+            'checks': 50
+        }
 
         self.flann = cv2.FlannBasedMatcher(index_params, search_params)
 
@@ -167,10 +173,10 @@ class DetectSign(Node):
                 )
         elif image_out_num == 4:
             draw_params_tunnel = {
-                "matchColor": (255, 0, 0),  # draw matches in green color
-                "singlePointColor": None,
-                "matchesMask": matchesMask_tunnel,  # draw only inliers
-                "flags": 2,
+                'matchColor': (255, 0, 0),  # draw matches in green color
+                'singlePointColor': None,
+                'matchesMask': matchesMask_tunnel,  # draw only inliers
+                'flags': 2,
             }
 
             final_tunnel = cv2.drawMatches(
