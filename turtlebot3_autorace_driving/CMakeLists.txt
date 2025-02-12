@@ -17,7 +17,7 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  nodes/control_lane.py
+  src/control_lane.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

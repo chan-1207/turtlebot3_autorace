@@ -14,8 +14,8 @@ find_package(cv_bridge REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  src/turtlebot3_autorace_camera/image_compensation.py
-  src/turtlebot3_autorace_camera/image_projection.py
+  src/image_compensation.py
+  src/image_projection.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -12,12 +12,12 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  src/turtlebot3_autorace_detect/detect_construction_sign.py
-  src/turtlebot3_autorace_detect/detect_intersection_sign.py
-  src/turtlebot3_autorace_detect/detect_lane.py
-  src/turtlebot3_autorace_detect/detect_parking_sign.py
-  src/turtlebot3_autorace_detect/detect_level_crossing_sign.py
-  src/turtlebot3_autorace_detect/detect_tunnel_sign.py
+  src/detect_construction_sign.py
+  src/detect_intersection_sign.py
+  src/detect_lane.py
+  src/detect_parking_sign.py
+  src/detect_level_crossing_sign.py
+  src/detect_tunnel_sign.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
