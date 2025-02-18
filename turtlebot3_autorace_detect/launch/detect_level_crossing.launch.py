@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -17,7 +16,7 @@
 # limitations under the License.
 ################################################################################
 
-# Author: Leon Jung
+# Author: Leon Jung, ChanHyeong Lee
 
 import os
 

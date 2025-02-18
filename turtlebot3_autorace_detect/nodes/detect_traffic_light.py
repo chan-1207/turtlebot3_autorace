@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -17,7 +16,7 @@
 # limitations under the License.
 ################################################################################
 
-# Author: Leon Jung, Gilbert, Ashe Kim
+# Author: Leon Jung, Gilbert, Ashe Kim, ChanHyeong Lee
 
 import time
 
@@ -51,7 +50,6 @@ class DetectTrafficLight(Node):
             description='Lightness Value (0~255)'
         )
 
-        # declare parameters
         self.declare_parameter('hue_red_l', 0, hue_descriptor)
         self.declare_parameter('hue_red_h', 26, hue_descriptor)
         self.declare_parameter('saturation_red_l', 239, sat_descriptor)
@@ -75,7 +73,6 @@ class DetectTrafficLight(Node):
 
         self.declare_parameter('is_calibration_mode', False)
 
-        # get parameters
         self.hue_red_l = self.get_parameter(
             'hue_red_l').get_parameter_value().integer_value
         self.hue_red_h = self.get_parameter(
@@ -118,23 +115,20 @@ class DetectTrafficLight(Node):
         self.is_calibration_mode = self.get_parameter(
             'is_calibration_mode').get_parameter_value().bool_value
         if self.is_calibration_mode:
-            self.add_on_set_parameters_callback(self.cbGetDetectTrafficLightParam)
+            self.add_on_set_parameters_callback(self.get_detect_traffic_light_param)
 
-        # 이미지 타입 설정 ("compressed" 또는 "raw")
         self.sub_image_type = "compressed"
         self.pub_image_type = "compressed"
 
         self.counter = 1
 
-        # 이미지 구독자 생성
         if self.sub_image_type == "compressed":
             self.sub_image_original = self.create_subscription(
-                CompressedImage, '/detect/image_input/compressed', self.cbGetImage, 1)
+                CompressedImage, '/detect/image_input/compressed', self.get_image, 1)
         else:
             self.sub_image_original = self.create_subscription(
-                Image, '/detect/image_input', self.cbGetImage, 1)
+                Image, '/detect/image_input', self.get_image, 1)
 
-        # 처리된 이미지 발행자 생성
         if self.pub_image_type == "compressed":
             self.pub_image_traffic_light = self.create_publisher(
                 CompressedImage, '/detect/image_output/compressed', 1)
@@ -142,7 +136,6 @@ class DetectTrafficLight(Node):
             self.pub_image_traffic_light = self.create_publisher(
                 Image, '/detect/image_output', 1)
 
-        # calibration 모드일 경우 보조 이미지 발행자 생성
         if self.is_calibration_mode:
             if self.pub_image_type == "compressed":
                 self.pub_image_red_light = self.create_publisher(
@@ -172,11 +165,9 @@ class DetectTrafficLight(Node):
         self.off_traffic = False
 
         time.sleep(1)
-        # 10Hz로 타이머 콜백 실행 (0.1초 간격)
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-    def cbGetDetectTrafficLightParam(self, params):
-        # 파라미터 변경 콜백 (SetParametersResult 반환)
+    def get_detect_traffic_light_param(self, params):
         for param in params:
             if param.name == 'hue_red_l':
                 self.hue_red_l = param.value
@@ -234,7 +225,7 @@ class DetectTrafficLight(Node):
                 self.get_logger().info(f"lightness_green_h set to: {param.value}")
         return SetParametersResult(successful=True)
 
-    def cbGetImage(self, image_msg):
+    def get_image(self, image_msg):
         # Processing every 3 frames to reduce frame processing load
         if self.counter % 3 != 0:
             self.counter += 1
@@ -256,30 +247,30 @@ class DetectTrafficLight(Node):
 
     def timer_callback(self):
         if self.is_image_available and not self.is_traffic_light_finished:
-            self.fnFindTrafficLight()
+            self.find_traffic_light()
 
-    def fnFindTrafficLight(self):
-        cv_image_mask = self.fnMaskGreenTrafficLight()
+    def find_traffic_light(self):
+        cv_image_mask = self.mask_green_traffic_light()
         cv_image_mask = cv2.GaussianBlur(cv_image_mask, (5, 5), 0)
 
-        status1 = self.fnFindCircleOfTrafficLight(cv_image_mask, 'green')
+        status1 = self.find_circle_of_traffic_light(cv_image_mask, 'green')
         if status1 == 1 or status1 == 5:
             self.get_logger().info("detect GREEN")
             self.stop_count = 0
             self.green_count += 1
         else:
             self.green_count = 0
-            cv_image_mask = self.fnMaskYellowTrafficLight()
+            cv_image_mask = self.mask_yellow_traffic_light()
             cv_image_mask = cv2.GaussianBlur(cv_image_mask, (5, 5), 0)
-            status2 = self.fnFindCircleOfTrafficLight(cv_image_mask, 'yellow')
+            status2 = self.find_circle_of_traffic_light(cv_image_mask, 'yellow')
             if status2 == 2:
                 self.get_logger().info("detect YELLOW")
                 self.yellow_count += 1
             else:
                 self.yellow_count = 0
-                cv_image_mask = self.fnMaskRedTrafficLight()
+                cv_image_mask = self.mask_red_traffic_light()
                 cv_image_mask = cv2.GaussianBlur(cv_image_mask, (5, 5), 0)
-                status3 = self.fnFindCircleOfTrafficLight(cv_image_mask, 'red')
+                status3 = self.find_circle_of_traffic_light(cv_image_mask, 'red')
                 if status3 == 3:
                     self.get_logger().info("detect RED")
                     self.red_count += 1
@@ -318,7 +309,7 @@ class DetectTrafficLight(Node):
             self.pub_image_traffic_light.publish(
                 self.cvBridge.cv2_to_imgmsg(self.cv_image, "bgr8"))
 
-    def fnMaskRedTrafficLight(self):
+    def mask_red_traffic_light(self):
         image = np.copy(self.cv_image)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -338,7 +329,7 @@ class DetectTrafficLight(Node):
         mask = cv2.bitwise_not(mask)
         return mask
 
-    def fnMaskYellowTrafficLight(self):
+    def mask_yellow_traffic_light(self):
         image = np.copy(self.cv_image)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -362,7 +353,7 @@ class DetectTrafficLight(Node):
         mask = cv2.bitwise_not(mask)
         return mask
 
-    def fnMaskGreenTrafficLight(self):
+    def mask_green_traffic_light(self):
         image = np.copy(self.cv_image)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -382,7 +373,7 @@ class DetectTrafficLight(Node):
         mask = cv2.bitwise_not(mask)
         return mask
 
-    def fnFindCircleOfTrafficLight(self, mask, find_color):
+    def find_circle_of_traffic_light(self, mask, find_color):
         status = 0
         params = cv2.SimpleBlobDetector_Params()
         params.minThreshold = 0
@@ -397,13 +388,7 @@ class DetectTrafficLight(Node):
 
         detector = cv2.SimpleBlobDetector_create(params)
         keypts = detector.detect(mask)
-#        frame = cv2.drawKeypoints(
-#            self.cv_image, keypts,
-#            np.array([]),
-#            (0, 255, 255),
-#           cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-        # 원래 코드 상수값 (좌표 범위)
         col1 = 180
         col2 = 270
         col3 = 305
