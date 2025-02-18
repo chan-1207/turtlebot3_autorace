@@ -4,8 +4,8 @@
   <name>turtlebot3_autorace_detect</name>
   <version>1.0.0</version>
   <description>ROS2 port of turtlebot3_autorace_detect</description>
-  <maintainer email="junyeong4321@gmail.com">jun</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="pyo@robotis.com">Pyo</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

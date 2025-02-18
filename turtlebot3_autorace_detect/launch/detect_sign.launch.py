@@ -17,7 +17,7 @@
 # limitations under the License.
 ################################################################################
 
-# Author: Leon Jung, Gilbert, Ashe Kim
+# Author: Leon Jung, Gilbert, Ashe Kim, ChanHyeong Lee
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument

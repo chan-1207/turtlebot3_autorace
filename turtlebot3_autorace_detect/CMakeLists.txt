@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 project(turtlebot3_autorace_detect)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -12,32 +12,25 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  nodes/detect_lane.py
-  nodes/detect_traffic_light.py
-  nodes/detect_level_crossing.py
   nodes/detect_construction_sign.py
   nodes/detect_intersection_sign.py
-  nodes/detect_level_crossing_sign.py
+  nodes/detect_lane.py
   nodes/detect_parking_sign.py
+  nodes/detect_level_crossing_sign.py
   nodes/detect_tunnel_sign.py
   DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY param/
-  DESTINATION share/${PROJECT_NAME}/param
 )
 
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
 
-install(DIRECTORY image/
-  DESTINATION share/${PROJECT_NAME}/image
+install(DIRECTORY param/
+  DESTINATION share/${PROJECT_NAME}/param
 )
 
-install(DIRECTORY
-  param cfg
-  DESTINATION share/${PROJECT_NAME}
+install(DIRECTORY image/
+  DESTINATION share/${PROJECT_NAME}/image
 )
 
 if(BUILD_TESTING)
@@ -53,3 +46,5 @@ if(BUILD_TESTING)
   #  DESTINATION share/${PROJECT_NAME}
   #)
 endif()
+
+ament_package()
