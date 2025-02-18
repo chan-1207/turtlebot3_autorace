@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ################################################################################
-# Copyright 2018 ROBOTIS CO., LTD.
+# Copyright 2025 ROBOTIS CO., LTD.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +21,7 @@
 import cv2
 import numpy as np
 import rclpy
+from geometry_msgs.msg import Point
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from sklearn.cluster import DBSCAN
@@ -33,6 +33,7 @@ from turtlebot3_autorace_msgs.msg import Tracker
 class LidarTracker(Node):
     def __init__(self):
         super().__init__('lidar_node')
+
         self.subscription = self.create_subscription(
             LaserScan,
             '/scan',
@@ -40,7 +41,12 @@ class LidarTracker(Node):
             10
         )
 
-        self.publisher = self.create_publisher(Objects, '/tracked_objects', 10)
+        self.publisher = self.create_publisher(
+            Objects,
+            '/tracked_objects',
+            10
+        )
+
         self.timer = self.create_timer(0.03, self.process_func)
         self.previous_objects = []
         self.epsilon = 0.08
@@ -74,19 +80,26 @@ class LidarTracker(Node):
     def detect_objects(self, points):
         if points.shape[0] == 0:
             return []
+
         clustering = DBSCAN(eps=self.epsilon, min_samples=3).fit(points)
         labels = clustering.labels_
         clusters = []
         for label in set(labels):
             if label == -1:
                 continue
+
             cluster_points = points[labels == label]
             centroid = np.mean(cluster_points, axis=0)
             if np.linalg.norm(centroid) > self.max_tracking_distance:
                 continue
+
             rect = cv2.minAreaRect(cluster_points.astype(np.float32))
             width, height = rect[1]
-            clusters.append((centroid[0], centroid[1], width, height))
+            max_size = 0.5
+            if width > max_size or height > max_size:
+                continue
+
+            clusters.append((centroid[0], centroid[1], cluster_points))
         return clusters
 
     def track_objects(self, clusters):
@@ -94,33 +107,34 @@ class LidarTracker(Node):
         if len(clusters) == 0:
             self.previous_objects = []
             return []
+
         if len(self.previous_objects) == 0:
             for obj in clusters:
                 self.last_id = (self.last_id + 1) % 256
-                tracked.append((obj[0], obj[1], obj[2], obj[3], self.last_id))
+                tracked.append((obj[0], obj[1], self.last_id, obj[2]))
             return tracked
 
         used_indices = set()
         for prev in self.previous_objects:
-            prev_x, prev_y, prev_id = prev
+            prev_x, prev_y, prev_id, prev_points = prev
             best_index = None
             best_distance = float('inf')
             for i, cur in enumerate(clusters):
                 if i in used_indices:
                     continue
-                cur_x, cur_y = cur
+                cur_x, cur_y = cur[0], cur[1]
                 dist = np.sqrt((cur_x - prev_x)**2 + (cur_y - prev_y)**2)
                 if dist < best_distance:
                     best_distance = dist
                     best_index = i
             if best_distance <= self.tracking_thres and best_index is not None:
                 cur = clusters[best_index]
-                tracked.append((cur[0], cur[1], cur[2], cur[3], prev_id))
+                tracked.append((cur[0], cur[1], prev_id, cur[2]))
                 used_indices.add(best_index)
         for i, cur in enumerate(clusters):
             if i not in used_indices:
                 self.last_id = (self.last_id + 1) % 256
-                tracked.append((cur[0], cur[1], cur[2], cur[3], self.last_id))
+                tracked.append((cur[0], cur[1], self.last_id, cur[2]))
         return tracked
 
     def publish_tracked_objects(self, tracked):
@@ -129,9 +143,13 @@ class LidarTracker(Node):
             tracker = Tracker()
             tracker.x = float(obj[0])
             tracker.y = float(obj[1])
-            tracker.width = float(obj[2])
-            tracker.height = float(obj[3])
-            tracker.id = int(obj[4])
+            tracker.id = int(obj[2])
+            for pt in obj[3]:
+                p = Point()
+                p.x = float(pt[0])
+                p.y = float(pt[1])
+                p.z = 0.0
+                tracker.raw_points.append(p)
             objects.objects.append(tracker)
         self.publisher.publish(objects)
 
@@ -146,6 +164,7 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

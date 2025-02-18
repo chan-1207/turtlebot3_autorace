@@ -1,5 +1,4 @@
-float32 x
-float32 y
+float64 x
+float64 y
 uint8 id
-float32 width
-float32 height
+geometry_msgs/Point[] raw_points
