@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -17,7 +16,7 @@
 # limitations under the License.
 ################################################################################
 
-# Author: Leon Jung, Gilbert, Ashe Kim
+# Author: Leon Jung, Gilbert, Ashe Kim, ChanHyeong Lee
 
 import math
 import time
@@ -176,19 +175,22 @@ class DetectLevelNode(Node):
             self.create_subscription(
                 CompressedImage,
                 '/detect/image_input/compressed',
-                self.cbGetImage,
+                self.get_image,
                 10
                 )
         else:  # raw
             self.create_subscription(
                 Image,
                 '/detect/image_input',
-                self.cbGetImage,
+                self.get_image,
                 10
                 )
 
         self.create_subscription(
-            UInt8, '/detect/level_crossing_order', self.cbLevelCrossingOrder, 10
+            UInt8,
+            '/detect/level_crossing_order',
+            self.level_crossing_order,
+            10
             )
 
         self.timer = self.create_timer(1.0/15.0, self.timer_callback)
@@ -214,9 +216,9 @@ class DetectLevelNode(Node):
 
     def timer_callback(self):
         if self.cv_image is not None:
-            self.fnFindLevel()
+            self.find_level()
 
-    def cbGetImage(self, image_msg):
+    def get_image(self, image_msg):
         if self.counter % 3 != 0:
             self.counter += 1
             return
@@ -232,11 +234,11 @@ class DetectLevelNode(Node):
             except Exception as e:
                 self.get_logger().error("CV Bridge error: %s" % str(e))
 
-    def cbLevelCrossingOrder(self, order_msg):
+    def level_crossing_order(self, order_msg):
         pub_level_crossing_return = UInt8()
         if order_msg.data == self.StepOfLevelCrossing.pass_level.value:
             while rclpy.ok():
-                is_level_detected, _, _ = self.fnFindLevel()
+                is_level_detected, _, _ = self.find_level()
                 rclpy.spin_once(self, timeout_sec=0.01)
                 if is_level_detected:
                     self.get_logger().info("Level Detected")
@@ -246,7 +248,7 @@ class DetectLevelNode(Node):
                     break
 
             while rclpy.ok():
-                _, is_level_close, _ = self.fnFindLevel()
+                _, is_level_close, _ = self.find_level()
                 rclpy.spin_once(self, timeout_sec=0.01)
                 if is_level_close:
                     self.get_logger().info("STOP")
@@ -256,7 +258,7 @@ class DetectLevelNode(Node):
                     break
 
             while rclpy.ok():
-                _, _, is_level_opened = self.fnFindLevel()
+                _, _, is_level_opened = self.find_level()
                 rclpy.spin_once(self, timeout_sec=0.01)
                 if is_level_opened:
                     self.get_logger().info("GO")
@@ -271,12 +273,12 @@ class DetectLevelNode(Node):
         self.get_logger().info(pub_level_crossing_return.data)
         time.sleep(3.0)
 
-    def fnFindLevel(self):
-        mask = self.fnMaskRedOfLevel()
+    def find_level(self):
+        mask = self.mask_red_of_level()
         mask = cv2.GaussianBlur(mask, (5, 5), 0)
-        return self.fnFindRectOfLevel(mask)
+        return self.find_rect_of_level(mask)
 
-    def fnMaskRedOfLevel(self):
+    def mask_red_of_level(self):
         if self.cv_image is None:
             return None
         image = self.cv_image.copy()
@@ -297,7 +299,7 @@ class DetectLevelNode(Node):
         mask = cv2.bitwise_not(mask)
         return mask
 
-    def fnFindRectOfLevel(self, mask):
+    def find_rect_of_level(self, mask):
         is_level_detected = False
         is_level_close = False
         is_level_opened = False
@@ -313,7 +315,7 @@ class DetectLevelNode(Node):
         params.filterByConvexity = True
         params.minConvexity = 0.9
 
-        # 설정된 파라미터를 기반으로 blob detector 생성
+        # create blob detector
         detector = cv2.SimpleBlobDetector_create(params)
         keypts = detector.detect(mask)
         frame = cv2.drawKeypoints(
