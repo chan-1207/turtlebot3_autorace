@@ -24,4 +24,3 @@ detect_traffic_light:
           saturation_h: 255
           lightness_l: 131
           lightness_h: 255
-
