@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2025 ROBOTIS CO., LTD.
@@ -34,14 +35,14 @@ def generate_launch_description():
     )
 
     lidar_tracker_node = Node(
-        package='turtlebot3_autorace_construction',
+        package='turtlebot3_autorace_mission',
         executable='tracking_construction.py',
         name='tracking_construction',
         output='screen'
     )
 
     avoid_object_node = Node(
-        package='turtlebot3_autorace_construction',
+        package='turtlebot3_autorace_mission',
         executable='avoid_construction.py',
         name='avoid_construction',
         output='screen'
@@ -69,7 +70,7 @@ def generate_launch_description():
     )
 
     control_node = Node(
-            package='turtlebot3_autorace_driving',
+            package='turtlebot3_autorace_mission',
             executable='control_lane.py',
             name='control_lane',
             output='screen',

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -24,7 +25,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     control_node = Node(
-            package='turtlebot3_autorace_driving',
+            package='turtlebot3_autorace_mission',
             executable='control_lane.py',
             name='control_lane',
             output='screen',

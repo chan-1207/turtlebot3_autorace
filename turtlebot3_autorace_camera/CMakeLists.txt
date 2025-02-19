@@ -14,18 +14,17 @@ find_package(cv_bridge REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  nodes/image_compensation.py
-  nodes/image_projection.py
+  src/image_compensation.py
+  src/image_projection.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
+  DESTINATION share/${PROJECT_NAME}
 )
 install(DIRECTORY calibration
   DESTINATION share/${PROJECT_NAME}
 )
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

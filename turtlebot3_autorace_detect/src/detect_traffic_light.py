@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -117,7 +118,7 @@ class DetectTrafficLight(Node):
         if self.is_calibration_mode:
             self.add_on_set_parameters_callback(self.get_detect_traffic_light_param)
 
-        self.sub_image_type = "compressed"
+        self.sub_image_type = "raw"
         self.pub_image_type = "compressed"
 
         self.counter = 1

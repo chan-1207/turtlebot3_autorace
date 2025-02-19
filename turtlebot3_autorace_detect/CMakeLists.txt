@@ -12,25 +12,27 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  nodes/detect_construction_sign.py
-  nodes/detect_intersection_sign.py
-  nodes/detect_lane.py
-  nodes/detect_parking_sign.py
-  nodes/detect_level_crossing_sign.py
-  nodes/detect_tunnel_sign.py
+  src/detect_construction_sign.py
+  src/detect_intersection_sign.py
+  src/detect_lane.py
+  src/detect_level_crossing_sign.py
+  src/detect_level_crossing.py
+  src/detect_parking_sign.py
+  src/detect_traffic_light.py
+  src/detect_tunnel_sign.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY param/
-  DESTINATION share/${PROJECT_NAME}/param
+install(DIRECTORY param
+  DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY image/
-  DESTINATION share/${PROJECT_NAME}/image
+install(DIRECTORY image
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(turtlebot3_autorace_driving)
+project(turtlebot3_autorace_mission)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,22 +7,25 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-
-find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 install(PROGRAMS
-  nodes/control_lane.py
+  src/avoid_construction.py
+  src/control_lane.py
+  src/mission_tunnel.py
+  src/tracking_construction.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY map
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

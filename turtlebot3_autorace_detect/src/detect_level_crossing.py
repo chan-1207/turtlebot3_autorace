@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
@@ -16,7 +17,7 @@
 # limitations under the License.
 ################################################################################
 
-# Author: Leon Jung, Gilbert, Ashe Kim, ChanHyeong Lee
+# Authors: Leon Jung, [AuTURBO] Kihoon Kim (https://github.com/auturbo), Gilbert, Ashe Kim, ChanHyeong Lee
 
 import math
 import time

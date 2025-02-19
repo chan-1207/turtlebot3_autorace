@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 ################################################################################
 # Copyright 2025 ROBOTIS CO., LTD.
@@ -33,7 +34,7 @@ def generate_launch_description():
 
     # Map file path
     map_file = os.path.join(
-            get_package_share_directory('turtlebot3_autorace_tunnel'),
+            get_package_share_directory('turtlebot3_autorace_mission'),
             'map',
             'map.yaml')
 
@@ -50,7 +51,7 @@ def generate_launch_description():
 
     # Execute the set_init_pose.py node via ros2 run command
     mission_tunnel = ExecuteProcess(
-        cmd=['ros2', 'run', 'turtlebot3_autorace_tunnel', 'mission_tunnel.py'],
+        cmd=['ros2', 'run', 'turtlebot3_autorace_mission', 'mission_tunnel.py'],
         output='screen'
     )
 
